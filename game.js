@@ -23,104 +23,68 @@ const ctx = canvas.getContext('2d');
 const scoreElement = document.getElementById('score');
 
 // Load sound effects
-const SOUND_ENABLED = true; // Global flag to enable/disable sounds
+const thrusterSound = new Audio('https://www.myinstants.com/media/sounds/cash-register-sound-effect.mp3'); // Proper cash register "ca-ching" sound
+thrusterSound.volume = 0.5; // Set volume to 50%
+const transformSound = new Audio('https://assets.mixkit.co/active_storage/sfx/1184/1184-preview.mp3');
+transformSound.volume = 0.4; // Set volume to 40%
 
-// Create a sound pool for cash register sounds to avoid delay
-const CASH_REGISTER_POOL_SIZE = 5;
-const cashRegisterSoundPool = [];
-for (let i = 0; i < CASH_REGISTER_POOL_SIZE; i++) {
-    const sound = new Audio('https://www.myinstants.com/media/sounds/cash-register-sound-effect.mp3');
-    sound.volume = 0.5;
-    sound.load(); // Preload the sound
-    cashRegisterSoundPool.push(sound);
-}
-let currentCashRegisterSound = 0;
+// Create Elon Musk quotes as HTML audio elements for better browser compatibility
+const muskQuotesHTML = `
+<audio id="musk-quote-1" src="https://www.myinstants.com/media/sounds/elon-musk-free-speech.mp3" preload="auto"></audio>
+<audio id="musk-quote-2" src="https://www.myinstants.com/media/sounds/elon-musk-twitter-is-the-people.mp3" preload="auto"></audio>
+<audio id="musk-quote-3" src="https://www.myinstants.com/media/sounds/elon-musk-taxes.mp3" preload="auto"></audio>
+<audio id="musk-quote-4" src="https://www.myinstants.com/media/sounds/elon-musk-woke.mp3" preload="auto"></audio>
+<audio id="musk-quote-5" src="https://www.myinstants.com/media/sounds/elon-musk-government.mp3" preload="auto"></audio>
+`;
 
-// Function to play cash register sound without delay
-function playCashRegisterSound() {
-    if (!SOUND_ENABLED) return;
-    
-    // Get the next sound from the pool
-    const sound = cashRegisterSoundPool[currentCashRegisterSound];
-    
-    // Reset the sound to ensure it plays
-    sound.currentTime = 0;
-    
-    // Play the sound
-    const playPromise = sound.play();
-    if (playPromise !== undefined) {
-        playPromise.catch(e => console.log("Error playing cash register sound:", e));
-    }
-    
-    // Move to the next sound in the pool
-    currentCashRegisterSound = (currentCashRegisterSound + 1) % CASH_REGISTER_POOL_SIZE;
-}
+// Add the audio elements to the document
+document.body.insertAdjacentHTML('beforeend', muskQuotesHTML);
 
-// Create a sound pool for Elon Musk quotes
-const ELON_QUOTES = [
-    'https://www.myinstants.com/media/sounds/elon-musk-twitter-is-the-people.mp3',
-    'https://www.myinstants.com/media/sounds/elon-musk-free-speech.mp3',
-    'https://www.myinstants.com/media/sounds/elon-musk-taxes.mp3',
-    'https://www.myinstants.com/media/sounds/elon-musk-woke.mp3',
-    'https://www.myinstants.com/media/sounds/elon-musk-government.mp3'
+// Get references to the audio elements
+const muskQuotes = [
+    document.getElementById('musk-quote-1'),
+    document.getElementById('musk-quote-2'),
+    document.getElementById('musk-quote-3'),
+    document.getElementById('musk-quote-4'),
+    document.getElementById('musk-quote-5')
 ];
 
-const ELON_POOL_SIZE = 3; // Number of instances per quote
-const elonSoundPool = [];
-
-// Create multiple instances of each quote
-for (const url of ELON_QUOTES) {
-    const quotePool = [];
-    for (let i = 0; i < ELON_POOL_SIZE; i++) {
-        const sound = new Audio(url);
-        sound.volume = 0.7;
-        sound.load(); // Preload the sound
-        quotePool.push(sound);
+// Set volume for all quotes
+muskQuotes.forEach(quote => {
+    if (quote) {
+        quote.volume = 0.7;
     }
-    elonSoundPool.push(quotePool);
-}
+});
 
-// Track which instance of each quote to use next
-const elonQuoteIndices = Array(ELON_QUOTES.length).fill(0);
-
-// Function to play a random Elon Musk quote without delay
-function playRandomElonQuote() {
-    if (!SOUND_ENABLED) return;
+// Function to play a random Elon Musk quote
+function playRandomMuskQuote() {
+    // Stop any currently playing quotes
+    muskQuotes.forEach(quote => {
+        if (quote) {
+            quote.pause();
+            quote.currentTime = 0;
+        }
+    });
     
-    // Select a random quote
-    const quoteIndex = Math.floor(Math.random() * ELON_QUOTES.length);
-    const quotePool = elonSoundPool[quoteIndex];
-    
-    // Get the next instance of this quote
-    const instanceIndex = elonQuoteIndices[quoteIndex];
-    const sound = quotePool[instanceIndex];
-    
-    // Reset the sound to ensure it plays
-    sound.currentTime = 0;
-    
-    // Play the sound
-    const playPromise = sound.play();
-    if (playPromise !== undefined) {
-        playPromise.catch(e => console.log("Error playing Elon quote:", e));
-    }
-    
-    // Move to the next instance for this quote
-    elonQuoteIndices[quoteIndex] = (instanceIndex + 1) % ELON_POOL_SIZE;
-}
-
-// Load transformation sound
-const transformSound = new Audio('https://assets.mixkit.co/active_storage/sfx/1184/1184-preview.mp3');
-transformSound.volume = 0.4;
-transformSound.load(); // Preload the sound
-
-// Function to play transformation sound
-function playTransformSound() {
-    if (!SOUND_ENABLED) return;
-    
-    transformSound.currentTime = 0;
-    const playPromise = transformSound.play();
-    if (playPromise !== undefined) {
-        playPromise.catch(e => console.log("Error playing transform sound:", e));
+    // Play a random quote
+    const availableQuotes = muskQuotes.filter(quote => quote !== null);
+    if (availableQuotes.length > 0) {
+        const randomIndex = Math.floor(Math.random() * availableQuotes.length);
+        
+        try {
+            console.log("Playing Elon Musk quote #" + (randomIndex + 1));
+            availableQuotes[randomIndex].play();
+        } catch (error) {
+            console.log("Error playing Musk quote:", error);
+            // Fallback to thruster sound
+            thrusterSound.currentTime = 0;
+            thrusterSound.play().catch(e => console.log("Error playing fallback sound:", e));
+        }
+    } else {
+        console.log("No Elon Musk quotes available");
+        // Fallback to thruster sound
+        thrusterSound.currentTime = 0;
+        thrusterSound.play().catch(e => console.log("Error playing fallback sound:", e));
     }
 }
 
@@ -184,9 +148,12 @@ class Cybertruck {
         // Activate thruster flare when flapping
         this.thrusterFlare = this.maxThrusterFlare;
         
-        // Play sounds
-        playCashRegisterSound();
-        playRandomElonQuote();
+        // Play thruster sound (different sound for truck)
+        thrusterSound.currentTime = 0;
+        thrusterSound.play().catch(e => console.log("Error playing thruster sound:", e));
+        
+        // Play a random Elon Musk quote
+        playRandomMuskQuote();
     }
 
     update() {
@@ -821,9 +788,12 @@ class PlayerRocket {
     flap() {
         this.velocity = FLAP_STRENGTH;
         
-        // Play sounds
-        playCashRegisterSound();
-        playRandomElonQuote();
+        // Play thruster sound effect
+        thrusterSound.currentTime = 0; // Reset sound to start
+        thrusterSound.play().catch(e => console.log("Error playing thruster sound:", e));
+        
+        // Play a random Elon Musk quote
+        playRandomMuskQuote();
     }
 
     update() {
@@ -1152,7 +1122,8 @@ class Game {
             this.transformed = true;
             
             // Play transformation sound
-            playTransformSound();
+            transformSound.currentTime = 0;
+            transformSound.play().catch(e => console.log("Error playing transformation sound:", e));
             
             // Create player rocket at the same position as the truck, but adjust for the new dimensions
             this.playerRocket = new PlayerRocket(
