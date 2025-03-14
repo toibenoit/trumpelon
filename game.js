@@ -20,6 +20,10 @@ const GAME_STATE = {
     GAME_OVER: 2
 };
 
+// Transformation thresholds
+const FIRST_TRANSFORMATION = 30;  // Cybertruck to Falcon 9
+const SECOND_TRANSFORMATION = 60; // Falcon 9 to Air Force One
+
 // Get canvas and context
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -1007,86 +1011,130 @@ class DonaldTrump {
     }
 }
 
-// New Chainsaw class for collectible item
-class Chainsaw {
+class AirForceOne {
     constructor(x, y) {
-        this.width = 40; // Increased size
-        this.height = 30;
-        // Position is now set when creating the chainsaw
         this.x = x;
         this.y = y;
-        
-        this.collected = false;
-        this.stationary = true; // Chainsaws are stationary
+        this.velocity = 0;
+        this.width = 80;
+        this.height = 30;
+        this.rotation = 0;
+        this.thrusterFlare = 0;
+        this.maxThrusterFlare = 20;
+        this.lastUpdate = Date.now();
     }
-    
+
+    flap() {
+        this.velocity = FLAP_STRENGTH;
+        this.thrusterFlare = this.maxThrusterFlare;
+        
+        // Play thruster sound
+        thrusterSound.currentTime = 0;
+        thrusterSound.play().catch(e => {});
+    }
+
     update() {
-        // No movement or glow - chainsaws are just stationary
-        // Empty update function
-    }
-    
-    draw() {
-        if (this.collected) return;
+        // Frame-rate independent physics
+        const now = Date.now();
+        const deltaTime = Math.min((now - this.lastUpdate) / 16.67, 2);
+        this.lastUpdate = now;
         
+        this.velocity += GRAVITY * deltaTime;
+        this.y += this.velocity * deltaTime;
+        this.rotation = Math.max(-20, Math.min(20, this.velocity * 1.5));
+        
+        // Gradually reduce thruster flare
+        if (this.thrusterFlare > 0) {
+            this.thrusterFlare -= 0.8 * deltaTime;
+            if (this.thrusterFlare < 0) this.thrusterFlare = 0;
+        }
+    }
+
+    draw() {
         ctx.save();
         ctx.translate(this.x + this.width/2, this.y + this.height/2);
+        ctx.rotate(this.rotation * Math.PI / 180);
         
-        // Draw an all-red chainsaw
-        
-        // Engine housing - darker red (main body)
-        ctx.fillStyle = '#CC2200';
-        ctx.fillRect(-this.width/2, -this.height/4, this.width/2, this.height/2);
-        
-        // Main body contour - bright red
-        ctx.fillStyle = '#FF3300';
-        ctx.fillRect(-this.width/2 + 2, -this.height/4 + 2, this.width/2 - 4, this.height/2 - 4);
-        
-        // Handle - dark red instead of black
-        ctx.fillStyle = '#AA1100';
-        ctx.fillRect(-this.width/2, -this.height/3, this.width/6, this.height/1.5);
-        
-        // Handle grip - ridges with dark red
-        ctx.fillStyle = '#991100';
-        for (let i = 0; i < 4; i++) {
-            ctx.fillRect(-this.width/2, -this.height/4 + i * (this.height/8), this.width/6, this.height/16);
-        }
-        
-        // Top handle connection - dark red
-        ctx.fillStyle = '#AA1100';
-        ctx.fillRect(-this.width/2 + this.width/6, -this.height/3, this.width/8, this.height/10);
-        
-        // Bar - light gray (keeping this gray for contrast)
-        ctx.fillStyle = '#AAAAAA';
-        ctx.fillRect(0, -this.height/10, this.width/2, this.height/5);
-        
-        // Chain outline
-        ctx.strokeStyle = '#AA1100';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.rect(0, -this.height/10, this.width/2, this.height/5);
-        ctx.stroke();
-        
-        // Chain teeth - white
+        // Main body (white with blue)
         ctx.fillStyle = '#FFFFFF';
-        const teethCount = 8;
-        const teethSpacing = (this.width/2) / teethCount;
-        for (let i = 0; i < teethCount; i++) {
-            ctx.fillRect(teethSpacing/2 + i * teethSpacing, -this.height/10, 2, this.height/5);
+        ctx.beginPath();
+        ctx.moveTo(-this.width/2, 0);
+        ctx.lineTo(-this.width/2 + 10, -this.height/2);
+        ctx.lineTo(this.width/2 - 10, -this.height/2);
+        ctx.lineTo(this.width/2, 0);
+        ctx.lineTo(this.width/2 - 5, this.height/2);
+        ctx.lineTo(-this.width/2 + 5, this.height/2);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Blue stripe
+        ctx.fillStyle = '#0A3161';
+        ctx.beginPath();
+        ctx.moveTo(-this.width/2 + 15, -this.height/2 + 2);
+        ctx.lineTo(this.width/2 - 15, -this.height/2 + 2);
+        ctx.lineTo(this.width/2 - 15, -this.height/2 + 8);
+        ctx.lineTo(-this.width/2 + 15, -this.height/2 + 8);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Windows
+        ctx.fillStyle = '#87CEFA';
+        for (let i = 0; i < 6; i++) {
+            ctx.beginPath();
+            ctx.rect(-this.width/2 + 20 + i * 10, -this.height/2 + 10, 6, 4);
+            ctx.fill();
         }
         
-        // Controls/button - dark red instead of black
-        ctx.fillStyle = '#991100';
-        ctx.fillRect(-this.width/4, -this.height/4, this.width/10, this.height/10);
+        // American flag on tail
+        ctx.fillStyle = '#0A3161';
+        ctx.beginPath();
+        ctx.rect(-this.width/2 + 5, -this.height/2 + 2, 8, 6);
+        ctx.fill();
         
-        // Small details - engine vents with dark red
-        ctx.fillStyle = '#991100';
-        for (let i = 0; i < 3; i++) {
-            ctx.fillRect(-this.width/3, -this.height/8 + i * (this.height/12), this.width/12, this.height/20);
+        // "United States of America" text
+        ctx.fillStyle = '#000000';
+        ctx.font = '4px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText("USA", 0, 0);
+        
+        // Engines
+        ctx.fillStyle = '#333333';
+        ctx.beginPath();
+        ctx.rect(-this.width/4, this.height/2 - 2, 6, 4);
+        ctx.rect(this.width/4 - 6, this.height/2 - 2, 6, 4);
+        ctx.fill();
+        
+        // Add thruster effect when active
+        if (this.thrusterFlare > 0) {
+            // Draw thruster flames
+            const flameColors = ['#FF4500', '#FFA500', '#FFFF00'];
+            const flameColor = flameColors[Math.floor(Date.now() / 100) % 3];
+            
+            // Main flame
+            const flameSize = this.thrusterFlare * 1.2;
+            ctx.fillStyle = flameColor;
+            
+            // Left engine flame
+            ctx.beginPath();
+            ctx.moveTo(-this.width/4, this.height/2 + 2);
+            ctx.lineTo(-this.width/4 - flameSize/2, this.height/2 + flameSize);
+            ctx.lineTo(-this.width/4 + 6, this.height/2 + 2);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Right engine flame
+            ctx.beginPath();
+            ctx.moveTo(this.width/4 - 6, this.height/2 + 2);
+            ctx.lineTo(this.width/4 - 3, this.height/2 + flameSize);
+            ctx.lineTo(this.width/4, this.height/2 + 2);
+            ctx.closePath();
+            ctx.fill();
         }
         
         ctx.restore();
     }
-    
+
     getRect() {
         return {
             x: this.x,
@@ -1094,6 +1142,77 @@ class Chainsaw {
             width: this.width,
             height: this.height
         };
+    }
+}
+
+class GreenlandParliament {
+    constructor() {
+        this.gap_y = Math.random() * (SCREEN_HEIGHT - 200) + 100;
+        this.x = SCREEN_WIDTH;
+        this.width = 80;
+        this.top_height = this.gap_y - PIPE_GAP / 2;
+        this.bottom_height = SCREEN_HEIGHT - (this.gap_y + PIPE_GAP / 2);
+    }
+
+    update() {
+        this.x -= PIPE_SPEED;
+    }
+
+    draw() {
+        // Draw top building
+        this.drawBuilding(this.x, 0, this.width, this.top_height, true);
+        
+        // Draw bottom building
+        this.drawBuilding(this.x, SCREEN_HEIGHT - this.bottom_height, this.width, this.bottom_height, false);
+    }
+    
+    drawBuilding(x, y, width, height, isTop) {
+        // Main building color - red and white (Greenland flag colors)
+        const gradient = ctx.createLinearGradient(x, y, x + width, y + height);
+        gradient.addColorStop(0, '#C8102E'); // Red
+        gradient.addColorStop(0.5, '#FFFFFF'); // White
+        gradient.addColorStop(1, '#C8102E'); // Red
+        
+        ctx.fillStyle = gradient;
+        ctx.fillRect(x, y, width, height);
+        
+        // Windows
+        ctx.fillStyle = '#87CEFA';
+        for (let i = 0; i < 6; i++) {
+            for (let j = 0; j < Math.floor(height / 20); j++) {
+                ctx.fillRect(
+                    x + 8 + i * 12,
+                    y + 8 + j * 20,
+                    8, 12
+                );
+            }
+        }
+        
+        // Greenland flag emblem
+        const flagY = isTop ? y + height - 40 : y + 10;
+        
+        // Draw circle emblem (simplified Greenland flag)
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(x + width/2, flagY + 15, 15, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.fillStyle = '#C8102E';
+        ctx.beginPath();
+        ctx.arc(x + width/2, flagY + 15, 15, Math.PI, 0);
+        ctx.fill();
+        
+        // Building outline
+        ctx.strokeStyle = '#333333';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x, y, width, height);
+    }
+
+    getRects() {
+        return [
+            { x: this.x, y: 0, width: this.width, height: this.top_height },
+            { x: this.x, y: SCREEN_HEIGHT - this.bottom_height, width: this.width, height: this.bottom_height }
+        ];
     }
 }
 
@@ -1113,6 +1232,12 @@ class Game {
         this.spaceGradient.addColorStop(0.3, '#0A0A3A');  // Dark blue
         this.spaceGradient.addColorStop(0.7, '#1A0A3A');  // Dark purple
         this.spaceGradient.addColorStop(1, '#000000');  // Black
+        
+        // Add Greenland sky gradient for second transformation
+        this.greenlandGradient = ctx.createLinearGradient(0, 0, 0, SCREEN_HEIGHT);
+        this.greenlandGradient.addColorStop(0, '#87CEEB');  // Sky blue
+        this.greenlandGradient.addColorStop(0.5, '#B0E0E6');  // Powder blue
+        this.greenlandGradient.addColorStop(1, '#FFFFFF');  // White (for snow)
         
         // Create White House
         this.whiteHouse1 = new WhiteHouse();
@@ -1135,9 +1260,11 @@ class Game {
         this.titleDirection = 1;
         this.titleSpeed = 0.5;
         
-        // Transformation threshold
-        this.transformationThreshold = 30;
+        // Transformation thresholds
+        this.firstTransformationThreshold = FIRST_TRANSFORMATION;
+        this.secondTransformationThreshold = SECOND_TRANSFORMATION;
         this.transformed = false;
+        this.secondTransformed = false;
 
         // Announcement variables
         this.announcement = "";
@@ -1149,14 +1276,9 @@ class Game {
         this.stars = [];
         this.generateStars();
         
-        // Add chainsaws collection
-        this.chainsaws = [];
-        this.lastChainsaw = 0;
-        this.chainsawCount = 0;
-        
-        // Add counter for tower spawns since last chainsaw
-        this.towersSinceLastChainsaw = 0;
-        this.towersUntilNextChainsaw = this.getRandomTowersUntilChainsaw();
+        // Snowflakes for Greenland background
+        this.snowflakes = [];
+        this.generateSnowflakes();
     }
 
     // Generate stars for space background
@@ -1172,6 +1294,20 @@ class Game {
         }
     }
     
+    // Generate snowflakes for Greenland background
+    generateSnowflakes() {
+        // Create 50 snowflakes with random positions and sizes
+        for (let i = 0; i < 50; i++) {
+            this.snowflakes.push({
+                x: Math.random() * SCREEN_WIDTH,
+                y: Math.random() * SCREEN_HEIGHT,
+                size: Math.random() * 3 + 1,
+                speed: Math.random() * 1 + 0.5,
+                opacity: Math.random() * 0.7 + 0.3
+            });
+        }
+    }
+    
     // Draw stars in space background
     drawStars() {
         for (let star of this.stars) {
@@ -1180,6 +1316,24 @@ class Game {
             ctx.fillStyle = `rgba(255, 255, 255, ${0.5 + twinkle * 0.5})`;
             ctx.beginPath();
             ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+    
+    // Draw snowflakes in Greenland background
+    drawSnowflakes() {
+        for (let snowflake of this.snowflakes) {
+            // Update snowflake position
+            snowflake.y += snowflake.speed;
+            if (snowflake.y > SCREEN_HEIGHT) {
+                snowflake.y = 0;
+                snowflake.x = Math.random() * SCREEN_WIDTH;
+            }
+            
+            // Draw snowflake
+            ctx.fillStyle = `rgba(255, 255, 255, ${snowflake.opacity})`;
+            ctx.beginPath();
+            ctx.arc(snowflake.x, snowflake.y, snowflake.size, 0, Math.PI * 2);
             ctx.fill();
         }
     }
@@ -1214,14 +1368,7 @@ class Game {
         }
         
         this.transformed = false;
-        
-        this.chainsaws = [];
-        this.lastChainsaw = 0;
-        this.chainsawCount = 0;
-        
-        // Reset chainsaw counters
-        this.towersSinceLastChainsaw = 0;
-        this.towersUntilNextChainsaw = this.getRandomTowersUntilChainsaw();
+        this.secondTransformed = false;
     }
 
     updateScore() {
@@ -1260,8 +1407,8 @@ class Game {
 
         const currentTime = now;
         
-        // Check for transformation
-        if (this.score >= this.transformationThreshold && !this.transformed) {
+        // Check for first transformation (Cybertruck to Falcon 9)
+        if (this.score >= this.firstTransformationThreshold && !this.transformed) {
             this.transformed = true;
             
             // Play transformation sound
@@ -1287,62 +1434,64 @@ class Game {
             this.announcementTime = Date.now();
         }
         
+        // Check for second transformation (Falcon 9 to Air Force One)
+        if (this.score >= this.secondTransformationThreshold && this.transformed && !this.secondTransformed) {
+            this.secondTransformed = true;
+            
+            // Play transformation sound
+            transformSound.currentTime = 0;
+            transformSound.play().catch(e => {});
+            
+            // Create Air Force One at the same position as the rocket
+            this.airForceOne = new AirForceOne(
+                this.playerRocket.x,
+                this.playerRocket.y
+            );
+            // Set the velocity to match the rocket's velocity for smooth transition
+            this.airForceOne.velocity = this.playerRocket.velocity;
+            
+            // Add a tower immediately after transformation to continue gameplay
+            if (this.towers.length === 0 || this.towers[this.towers.length - 1].x < SCREEN_WIDTH - 200) {
+                this.towers.push(new GreenlandParliament());
+                this.lastTower = currentTime;
+            }
+            
+            // Show transformation announcement
+            this.announcement = "Falcon 9 Transformed to Air Force One!";
+            this.announcementTime = Date.now();
+        }
+        
         // Update player based on transformation state
-        if (this.transformed) {
+        if (this.secondTransformed) {
+            this.airForceOne.update();
+        } else if (this.transformed) {
             this.playerRocket.update();
         } else {
             this.truck.update();
         }
         
-        // Update White Houses (background)
-        this.whiteHouse1.update();
-        this.whiteHouse2.update();
+        // Update White Houses (background) - only in first phase
+        if (!this.transformed) {
+            this.whiteHouse1.update();
+            this.whiteHouse2.update();
+        }
         
         // Generate new towers
         if (currentTime - this.lastTower > PIPE_FREQUENCY) {
-            let newTower;
-            if (this.transformed) {
-                newTower = new EPABuilding();
+            if (this.secondTransformed) {
+                this.towers.push(new GreenlandParliament());
+            } else if (this.transformed) {
+                this.towers.push(new EPABuilding());
             } else {
-                newTower = new TrumpTower();
+                this.towers.push(new TrumpTower());
             }
-            this.towers.push(newTower);
             this.lastTower = currentTime;
-            
-            // Increment tower counter
-            this.towersSinceLastChainsaw++;
-            
-            // Check if it's time to spawn a chainsaw
-            if (this.towersSinceLastChainsaw >= this.towersUntilNextChainsaw) {
-                // Position in the middle of the gap
-                const gapY = newTower.gap_y;
-                const chainsaw = new Chainsaw(
-                    newTower.x + newTower.width / 2 - 20, // Centered horizontally in tower
-                    gapY // Vertical position in the gap
-                );
-                this.chainsaws.push(chainsaw);
-                this.lastChainsaw = currentTime;
-                
-                // Reset counters
-                this.towersSinceLastChainsaw = 0;
-                this.towersUntilNextChainsaw = this.getRandomTowersUntilChainsaw();
-                
-                console.log(`Next chainsaw will appear after ${this.towersUntilNextChainsaw} towers`);
-            }
         }
 
         // Update towers with delta time
         for (let i = this.towers.length - 1; i >= 0; i--) {
             const tower = this.towers[i];
             tower.x -= PIPE_SPEED * deltaTime; // Apply delta time to tower movement
-            
-            // Also move any chainsaws that belong to this tower
-            for (const chainsaw of this.chainsaws) {
-                // If chainsaw is roughly aligned with this tower, move it at the same speed
-                if (Math.abs(chainsaw.x - (tower.x + tower.width / 2)) < tower.width) {
-                    chainsaw.x -= PIPE_SPEED * deltaTime;
-                }
-            }
             
             if (tower.x < -50) {
                 this.towers.splice(i, 1);
@@ -1361,62 +1510,39 @@ class Game {
             }
 
             // Check collisions
-            const playerRect = this.transformed ? this.playerRocket.getRect() : this.truck.getRect();
+            let playerRect;
+            if (this.secondTransformed) {
+                playerRect = this.airForceOne.getRect();
+            } else if (this.transformed) {
+                playerRect = this.playerRocket.getRect();
+            } else {
+                playerRect = this.truck.getRect();
+            }
+            
             for (const towerRect of tower.getRects()) {
                 if (this.checkCollision(playerRect, towerRect)) {
                     this.state = GAME_STATE.GAME_OVER;
-                    // Dispatch game over event
-                    document.dispatchEvent(new CustomEvent('gameOver'));
                     return;
                 }
             }
         }
 
-        // Update chainsaws (just checking for collisions since they don't animate)
-        for (let i = this.chainsaws.length - 1; i >= 0; i--) {
-            const chainsaw = this.chainsaws[i];
-            
-            // Remove chainsaws that are off screen
-            if (chainsaw.x < -50) {
-                this.chainsaws.splice(i, 1);
-                continue;
-            }
-            
-            // Check for collision with player
-            if (!chainsaw.collected) {
-                const playerRect = this.transformed ? this.playerRocket.getRect() : this.truck.getRect();
-                if (this.checkCollision(playerRect, chainsaw.getRect())) {
-                    chainsaw.collected = true;
-                    this.chainsawCount++;
-                    
-                    // Play a collection sound effect
-                    try {
-                        thrusterSound.currentTime = 0;
-                        thrusterSound.play().catch(e => {});
-                    } catch (e) {}
-                    
-                    // Remove the chainsaw
-                    this.chainsaws.splice(i, 1);
-                }
-            }
-        }
-
         // Check if player is off screen
-        if (this.transformed) {
+        if (this.secondTransformed) {
+            if (this.airForceOne.y < 0 || this.airForceOne.y > SCREEN_HEIGHT) {
+                this.state = GAME_STATE.GAME_OVER;
+            }
+        } else if (this.transformed) {
             if (this.playerRocket.y < 0 || this.playerRocket.y > SCREEN_HEIGHT) {
                 this.state = GAME_STATE.GAME_OVER;
-                // Dispatch game over event
-                document.dispatchEvent(new CustomEvent('gameOver'));
             }
         } else {
             if (this.truck.y < 0 || this.truck.y > SCREEN_HEIGHT) {
                 this.state = GAME_STATE.GAME_OVER;
-                // Dispatch game over event
-                document.dispatchEvent(new CustomEvent('gameOver'));
             }
         }
     }
-
+    
     showDebtReduction() {
         // This will be called when a tower is passed
         // We'll create a visual indicator that debt was reduced
@@ -1541,8 +1667,15 @@ class Game {
         }
         
         // Draw background based on transformation state
-        if (this.transformed) {
-            // Space background after transformation
+        if (this.secondTransformed) {
+            // Greenland background after second transformation
+            ctx.fillStyle = this.greenlandGradient;
+            ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+            
+            // Draw snowflakes
+            this.drawSnowflakes();
+        } else if (this.transformed) {
+            // Space background after first transformation
             ctx.fillStyle = this.spaceGradient;
             ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
             
@@ -1554,11 +1687,13 @@ class Game {
             ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
         }
         
-        // Draw rocket (in background)
-        this.rocket.draw();
+        // Draw rocket (in background) - only in first two phases
+        if (!this.secondTransformed) {
+            this.rocket.draw();
+        }
         
         // Draw ground only if not transformed
-        if (!this.transformed) {
+        if (!this.transformed && !this.secondTransformed) {
             ctx.fillStyle = '#8BC34A';
             ctx.fillRect(0, SCREEN_HEIGHT - 20, SCREEN_WIDTH, 20);
             
@@ -1568,7 +1703,9 @@ class Game {
         }
         
         // Draw game objects
-        if (this.transformed) {
+        if (this.secondTransformed) {
+            this.airForceOne.draw();
+        } else if (this.transformed) {
             this.playerRocket.draw();
         } else {
             this.truck.draw();
@@ -1576,11 +1713,6 @@ class Game {
         
         for (const tower of this.towers) {
             tower.draw();
-        }
-        
-        // Draw chainsaws
-        for (const chainsaw of this.chainsaws) {
-            chainsaw.draw();
         }
         
         // Draw score and debt counter inside the game canvas
@@ -1689,69 +1821,23 @@ class Game {
     
     // New method to draw the score counter inside the game canvas
     drawScoreCounter() {
-        // Set up shadow for better readability against any background
+        // Remove background and border, just draw the text directly
+        
+        // Draw score text with shadow for better visibility
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 18px Arial';
+        ctx.textAlign = 'left';
+        
+        // Add shadow for better readability against any background
         ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
         ctx.shadowBlur = 3;
         ctx.shadowOffsetX = 1;
         ctx.shadowOffsetY = 1;
         
-        // Draw chainsaw counter at the left side of the screen
-        ctx.save();
-        ctx.translate(15, 30);
+        // Draw score text
+        ctx.fillText(`Score: ${this.score}`, 15, 30);
         
-        // Draw a more detailed pixel art chainsaw
-        const iconSize = 24;
-        
-        // Engine housing - darker red (main body)
-        ctx.fillStyle = '#CC2200';
-        ctx.fillRect(0, -iconSize/4, iconSize/2, iconSize/2);
-        
-        // Main body contour - bright red
-        ctx.fillStyle = '#FF3300';
-        ctx.fillRect(2, -iconSize/4 + 2, iconSize/2 - 4, iconSize/2 - 4);
-        
-        // Handle - dark red instead of black
-        ctx.fillStyle = '#AA1100';
-        ctx.fillRect(0, -iconSize/3, iconSize/6, iconSize/1.5);
-        
-        // Handle grip - ridges with dark red
-        ctx.fillStyle = '#991100';
-        for (let i = 0; i < 3; i++) {
-            ctx.fillRect(0, -iconSize/4 + i * (iconSize/8), iconSize/6, iconSize/16);
-        }
-        
-        // Top handle connection - dark red
-        ctx.fillStyle = '#AA1100';
-        ctx.fillRect(iconSize/6, -iconSize/3, iconSize/8, iconSize/10);
-        
-        // Bar - light gray (keeping this gray for contrast)
-        ctx.fillStyle = '#AAAAAA';
-        ctx.fillRect(iconSize/2, -iconSize/10, iconSize/2, iconSize/5);
-        
-        // Chain outline
-        ctx.strokeStyle = '#AA1100';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.rect(iconSize/2, -iconSize/10, iconSize/2, iconSize/5);
-        ctx.stroke();
-        
-        // Chain teeth - white
-        ctx.fillStyle = '#FFFFFF';
-        const teethCount = 4;
-        const teethSpacing = (iconSize/2) / teethCount;
-        for (let i = 0; i < teethCount; i++) {
-            ctx.fillRect(iconSize/2 + teethSpacing/2 + i * teethSpacing, -iconSize/10, 1, iconSize/5);
-        }
-        
-        ctx.restore();
-        
-        // Draw chainsaw count (no glow effect)
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 18px Arial';
-        ctx.textAlign = 'left';
-        ctx.fillText(`× ${this.chainsawCount}`, 55, 30);
-        
-        // Draw debt text only (removed score text)
+        // Draw debt text
         ctx.textAlign = 'right';
         ctx.fillText(`Debt: $${(this.nationalDebt / 1000000000000).toFixed(2)}T`, SCREEN_WIDTH - 15, 30);
         
@@ -1785,8 +1871,6 @@ class Game {
 
 // Initialize game
 const game = new Game();
-// Make game accessible globally
-window.game = game;
 
 // Game loop
 function gameLoop() {
@@ -1831,7 +1915,9 @@ document.addEventListener('keydown', (event) => {
             game.reset();
         } else {
             // Flap the appropriate player
-            if (game.transformed) {
+            if (game.secondTransformed) {
+                game.airForceOne.flap();
+            } else if (game.transformed) {
                 game.playerRocket.flap();
             } else {
                 game.truck.flap();
@@ -1897,6 +1983,34 @@ function testFalcon9() {
     console.log("Test mode: Starting with Falcon 9 rocket!");
 }
 
+// Add a function to test the second transformation
+function testAirForceOne() {
+    // Reset the game first
+    game.reset();
+    
+    // Set the score to 59 (one away from second transformation)
+    game.score = 59;
+    
+    // Update the debt
+    game.nationalDebt -= (game.debtReduction * 59);
+    game.updateScore();
+    
+    // Start the game in PLAYING state
+    game.state = GAME_STATE.PLAYING;
+    
+    // Force first transformation
+    game.transformed = true;
+    game.playerRocket = new PlayerRocket(SCREEN_WIDTH / 3, SCREEN_HEIGHT / 2);
+    
+    // Add an EPA building
+    const building = new EPABuilding();
+    building.x = SCREEN_WIDTH - 150;
+    game.towers.push(building);
+    game.lastTower = Date.now();
+    
+    console.log("Test mode: Starting at obstacle 59 - Pass one more to transform into Air Force One!");
+}
+
 // Add keyboard shortcuts to trigger these functions
 document.addEventListener('keydown', (event) => {
     // Press 'T' key to start test mode (one away from transformation)
@@ -1907,21 +2021,14 @@ document.addEventListener('keydown', (event) => {
     else if (event.code === 'KeyF') {
         testFalcon9();
     }
+    // Press 'A' key to test Air Force One transformation
+    else if (event.code === 'KeyA') {
+        testAirForceOne();
+    }
     // Press 'D' key to toggle debug mode
     else if (event.code === 'KeyD') {
         DEBUG_MODE = !DEBUG_MODE;
         console.log("Debug mode:", DEBUG_MODE ? "ON" : "OFF");
-    }
-    // Press 'R' key to manually trigger thruster effect (for testing)
-    else if (event.code === 'KeyR') {
-        if (game.transformed && game.state === GAME_STATE.PLAYING) {
-            game.playerRocket.thrusterFlare = game.playerRocket.maxThrusterFlare;
-            game.playerRocket.flap();
-            console.log("Manual thruster test activated!");
-        } else if (game.state === GAME_STATE.PLAYING) {
-            game.truck.thrusterFlare = game.truck.maxThrusterFlare;
-            console.log("Manual truck thruster test activated!");
-        }
     }
 });
 
