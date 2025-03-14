@@ -1637,13 +1637,53 @@ class Game {
             ctx.fillStyle = 'white';
             ctx.font = 'bold 36px Arial';
             ctx.textAlign = 'center';
-            ctx.fillText('Game Over!', SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - 50);
+            ctx.fillText('Game Over!', SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - 70);
             
             ctx.font = '24px Arial';
-            ctx.fillText(`You reduced the debt by $${(this.score * this.debtReduction / 1000000000).toFixed(1)} billion`, SCREEN_WIDTH/2, SCREEN_HEIGHT/2);
+            ctx.fillText(`You reduced the debt by $${(this.score * this.debtReduction / 1000000000).toFixed(1)} billion`, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - 30);
+            
+            ctx.fillText(`Chainsaws collected: ${this.chainsawCount}`, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + 10);
             
             ctx.font = '20px Arial';
             ctx.fillText('Press SPACE to restart', SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + 50);
+            
+            // Check if user is logged in
+            const userData = localStorage.getItem('user');
+            const token = localStorage.getItem('token');
+            
+            if (userData && token) {
+                // User is logged in, show personalized message
+                const user = JSON.parse(userData);
+                ctx.font = '18px Arial';
+                ctx.fillStyle = '#33ccff';
+                ctx.fillText(`Progress saved for ${user.username}!`, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + 100);
+            } else {
+                // User is not logged in, show login/signup options
+                ctx.font = '18px Arial';
+                ctx.fillStyle = '#ff3366';
+                ctx.fillText('Want to save your progress?', SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + 100);
+                
+                // Login button
+                this.drawButton('Login', SCREEN_WIDTH/2 - 80, SCREEN_HEIGHT/2 + 130, 70, 30, '#ff3366');
+                
+                // Sign up button
+                this.drawButton('Sign Up', SCREEN_WIDTH/2 + 10, SCREEN_HEIGHT/2 + 130, 70, 30, '#ff3366');
+                
+                // Store button positions for click handling
+                this.loginButtonPos = {
+                    x: SCREEN_WIDTH/2 - 80,
+                    y: SCREEN_HEIGHT/2 + 130,
+                    width: 70,
+                    height: 30
+                };
+                
+                this.signupButtonPos = {
+                    x: SCREEN_WIDTH/2 + 10,
+                    y: SCREEN_HEIGHT/2 + 130,
+                    width: 70,
+                    height: 30
+                };
+            }
         }
     }
     
@@ -1726,6 +1766,20 @@ class Game {
     getRandomTowersUntilChainsaw() {
         return MIN_TOWERS_BEFORE_CHAINSAW + 
             Math.floor(Math.random() * (MAX_TOWERS_BEFORE_CHAINSAW - MIN_TOWERS_BEFORE_CHAINSAW + 1));
+    }
+
+    // Add a helper method to draw buttons on the canvas
+    drawButton(text, x, y, width, height, color) {
+        // Draw button background
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, width, height);
+        
+        // Draw button text
+        ctx.fillStyle = 'white';
+        ctx.font = '14px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, x + width/2, y + height/2);
     }
 }
 
@@ -1868,6 +1922,35 @@ document.addEventListener('keydown', (event) => {
             game.truck.thrusterFlare = game.truck.maxThrusterFlare;
             console.log("Manual truck thruster test activated!");
         }
+    }
+});
+
+// Add click handler for game over buttons
+document.getElementById('gameCanvas').addEventListener('click', function(event) {
+    // Only handle clicks in game over state
+    if (game.state !== GAME_STATE.GAME_OVER) return;
+    
+    // Get click coordinates relative to canvas
+    const rect = this.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+    
+    // Check if login button was clicked
+    if (game.loginButtonPos && 
+        mouseX >= game.loginButtonPos.x && 
+        mouseX <= game.loginButtonPos.x + game.loginButtonPos.width &&
+        mouseY >= game.loginButtonPos.y && 
+        mouseY <= game.loginButtonPos.y + game.loginButtonPos.height) {
+        window.location.href = '/login';
+    }
+    
+    // Check if signup button was clicked
+    if (game.signupButtonPos && 
+        mouseX >= game.signupButtonPos.x && 
+        mouseX <= game.signupButtonPos.x + game.signupButtonPos.width &&
+        mouseY >= game.signupButtonPos.y && 
+        mouseY <= game.signupButtonPos.y + game.signupButtonPos.height) {
+        window.location.href = '/login?signup=true';
     }
 });
 

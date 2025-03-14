@@ -198,7 +198,22 @@
         // Listen for game over events to save progress
         document.addEventListener('gameOver', function() {
             if (currentUser) {
+                // Save the current game progress
                 saveGameProgress();
+                
+                // Update UI to show progress was saved
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString();
+                document.getElementById('save-status').textContent = `Progress saved at ${timeStr}`;
+                
+                console.log('Game progress saved on game over');
+                
+                // The message will disappear in 3 seconds to keep the UI clean
+                setTimeout(() => {
+                    document.getElementById('save-status').textContent = '';
+                }, 3000);
+            } else {
+                console.log('User not logged in - progress not saved');
             }
         });
         

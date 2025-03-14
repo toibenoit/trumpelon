@@ -259,6 +259,14 @@
                 starsContainer.appendChild(star);
             }
             
+            // Check URL parameters to see if we should show signup form
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('signup') === 'true') {
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('signup-form').style.display = 'block';
+                document.getElementById('form-title').textContent = 'Sign Up for CyberFlap';
+            }
+            
             // Form toggle
             document.getElementById('show-signup').addEventListener('click', function() {
                 document.getElementById('login-form').style.display = 'none';
