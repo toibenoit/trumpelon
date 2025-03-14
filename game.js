@@ -1016,8 +1016,8 @@ class AirForceOne {
         this.x = x;
         this.y = y;
         this.velocity = 0;
-        this.width = 80;
-        this.height = 30;
+        this.width = 80; // Reduced from 100 (20% smaller)
+        this.height = 32; // Reduced from 40 (20% smaller)
         this.rotation = 0;
         this.thrusterFlare = 0;
         this.maxThrusterFlare = 20;
@@ -1028,7 +1028,7 @@ class AirForceOne {
         this.velocity = FLAP_STRENGTH;
         this.thrusterFlare = this.maxThrusterFlare;
         
-        // Play thruster sound
+        // Play electric hum sound
         thrusterSound.currentTime = 0;
         thrusterSound.play().catch(e => {});
     }
@@ -1055,48 +1055,130 @@ class AirForceOne {
         ctx.translate(this.x + this.width/2, this.y + this.height/2);
         ctx.rotate(this.rotation * Math.PI / 180);
         
-        // Main body (white with blue)
+        // Main body (white with exact Air Force One blue)
+        // The official Air Force One colors are white (#FFFFFF) and "Air Force Blue" (#1D4289)
         ctx.fillStyle = '#FFFFFF';
         ctx.beginPath();
         ctx.moveTo(-this.width/2, 0);
-        ctx.lineTo(-this.width/2 + 10, -this.height/2);
-        ctx.lineTo(this.width/2 - 10, -this.height/2);
+        ctx.lineTo(-this.width/2 + 15, -this.height/2);
+        ctx.lineTo(this.width/2 - 15, -this.height/2);
         ctx.lineTo(this.width/2, 0);
         ctx.lineTo(this.width/2 - 5, this.height/2);
         ctx.lineTo(-this.width/2 + 5, this.height/2);
         ctx.closePath();
         ctx.fill();
         
-        // Blue stripe
-        ctx.fillStyle = '#0A3161';
+        // Wings - distinctive feature of Air Force One
+        // Main wings
+        ctx.fillStyle = '#FFFFFF';
+        // Left wing
         ctx.beginPath();
-        ctx.moveTo(-this.width/2 + 15, -this.height/2 + 2);
-        ctx.lineTo(this.width/2 - 15, -this.height/2 + 2);
-        ctx.lineTo(this.width/2 - 15, -this.height/2 + 8);
-        ctx.lineTo(-this.width/2 + 15, -this.height/2 + 8);
+        ctx.moveTo(-this.width/4, 0);
+        ctx.lineTo(-this.width/4 - 30, this.height/4);
+        ctx.lineTo(-this.width/4 - 30, this.height/4 + 5);
+        ctx.lineTo(-this.width/4, this.height/4 + 2);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Right wing
+        ctx.beginPath();
+        ctx.moveTo(this.width/4, 0);
+        ctx.lineTo(this.width/4 + 30, this.height/4);
+        ctx.lineTo(this.width/4 + 30, this.height/4 + 5);
+        ctx.lineTo(this.width/4, this.height/4 + 2);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Tail wing
+        ctx.beginPath();
+        ctx.moveTo(-this.width/2 + 10, -this.height/2);
+        ctx.lineTo(-this.width/2, -this.height/2 - 15);
+        ctx.lineTo(-this.width/2 + 5, -this.height/2 - 15);
+        ctx.lineTo(-this.width/2 + 15, -this.height/2);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Blue stripe along the entire fuselage - using exact Air Force One blue
+        ctx.fillStyle = '#1D4289'; // Official Air Force One blue
+        ctx.beginPath();
+        ctx.moveTo(-this.width/2 + 12, -this.height/2 + 2);
+        ctx.lineTo(this.width/2 - 12, -this.height/2 + 2);
+        ctx.lineTo(this.width/2 - 12, -this.height/2 + 8);
+        ctx.lineTo(-this.width/2 + 12, -this.height/2 + 8);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Blue stripe on wings
+        // Left wing stripe
+        ctx.fillStyle = '#1D4289';
+        ctx.beginPath();
+        ctx.moveTo(-this.width/4 - 5, this.height/4);
+        ctx.lineTo(-this.width/4 - 25, this.height/4 + 2);
+        ctx.lineTo(-this.width/4 - 25, this.height/4 + 4);
+        ctx.lineTo(-this.width/4 - 5, this.height/4 + 2);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Right wing stripe
+        ctx.beginPath();
+        ctx.moveTo(this.width/4 + 5, this.height/4);
+        ctx.lineTo(this.width/4 + 25, this.height/4 + 2);
+        ctx.lineTo(this.width/4 + 25, this.height/4 + 4);
+        ctx.lineTo(this.width/4 + 5, this.height/4 + 2);
         ctx.closePath();
         ctx.fill();
         
         // Windows
         ctx.fillStyle = '#87CEFA';
-        for (let i = 0; i < 6; i++) {
+        for (let i = 0; i < 8; i++) {
             ctx.beginPath();
             ctx.rect(-this.width/2 + 20 + i * 10, -this.height/2 + 10, 6, 4);
             ctx.fill();
         }
         
         // American flag on tail
-        ctx.fillStyle = '#0A3161';
+        ctx.fillStyle = '#0A3161'; // Blue field
         ctx.beginPath();
         ctx.rect(-this.width/2 + 5, -this.height/2 + 2, 8, 6);
         ctx.fill();
         
-        // "United States of America" text
+        // Red and white stripes (simplified)
+        ctx.fillStyle = '#FF0000'; // Red stripes
+        ctx.beginPath();
+        ctx.rect(-this.width/2 + 5, -this.height/2 + 8, 8, 1);
+        ctx.rect(-this.width/2 + 5, -this.height/2 + 10, 8, 1);
+        ctx.rect(-this.width/2 + 5, -this.height/2 + 12, 8, 1);
+        ctx.fill();
+        
+        // White stars (simplified)
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.rect(-this.width/2 + 7, -this.height/2 + 4, 1, 1);
+        ctx.rect(-this.width/2 + 10, -this.height/2 + 4, 1, 1);
+        ctx.rect(-this.width/2 + 7, -this.height/2 + 6, 1, 1);
+        ctx.rect(-this.width/2 + 10, -this.height/2 + 6, 1, 1);
+        ctx.fill();
+        
+        // Presidential seal (simplified)
+        ctx.beginPath();
+        ctx.arc(0, 0, 6, 0, Math.PI * 2);
+        ctx.fillStyle = '#1D4289'; // Official Air Force One blue
+        ctx.fill();
+        ctx.strokeStyle = '#FFD700'; // Gold outline
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        
+        // "UNITED STATES OF AMERICA" text
         ctx.fillStyle = '#000000';
-        ctx.font = '4px Arial';
+        ctx.font = 'bold 7px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText("USA", 0, 0);
+        ctx.fillText("UNITED STATES OF AMERICA", 0, -8);
+        
+        // "AIR FORCE ONE" text - larger and more prominent
+        ctx.fillStyle = '#000000';
+        ctx.font = 'bold 10px Arial';
+        ctx.fillText("AIR FORCE ONE", 0, 8);
         
         // Engines
         ctx.fillStyle = '#333333';
@@ -1456,8 +1538,8 @@ class Game {
                 this.lastTower = currentTime;
             }
             
-            // Show transformation announcement
-            this.announcement = "Falcon 9 Transformed to Air Force One!";
+            // Show transformation announcement with clearer Air Force One reference
+            this.announcement = "Transformed to the Presidential Boeing 747 - AIR FORCE ONE!";
             this.announcementTime = Date.now();
         }
         
@@ -1991,7 +2073,7 @@ function testAirForceOne() {
     // Set the score to 59 (one away from second transformation)
     game.score = 59;
     
-    // Update the debt
+    // Update the debt based on 59 obstacles passed
     game.nationalDebt -= (game.debtReduction * 59);
     game.updateScore();
     
