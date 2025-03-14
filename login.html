@@ -4,20 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CyberFlap - Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
-        @font-face {
-            font-family: 'PixelFont';
-            src: url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-        }
-        
         body {
+            background-color: #0c0c1d;
             margin: 0;
-            padding: 0;
-            background-color: #0a0a1a;
+            font-family: 'Press Start 2P', cursive;
             color: #fff;
-            font-family: 'PixelFont', 'Press Start 2P', monospace;
             overflow: hidden;
-            position: relative;
             height: 100vh;
             display: flex;
             justify-content: center;
@@ -25,38 +19,41 @@
         }
         
         .stars {
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
+            pointer-events: none;
             z-index: -1;
         }
         
         .star {
             position: absolute;
-            background-color: #fff;
             width: 2px;
             height: 2px;
+            background-color: #fff;
             border-radius: 50%;
-            animation: twinkle 4s infinite;
+            animation: twinkle 2s infinite;
         }
         
         @keyframes twinkle {
-            0% { opacity: 0.2; }
+            0% { opacity: 0.3; }
             50% { opacity: 1; }
-            100% { opacity: 0.2; }
+            100% { opacity: 0.3; }
         }
         
         .login-container {
             background-color: rgba(20, 20, 40, 0.8);
-            border: 4px solid #ff3366;
-            border-radius: 8px;
+            border: 4px solid #ff00ff;
+            box-shadow: 0 0 20px #ff00ff;
+            width: 90%;
+            max-width: 500px;
             padding: 30px;
-            width: 320px;
-            box-shadow: 0 0 20px rgba(255, 51, 102, 0.5);
-            image-rendering: pixelated;
+            border-radius: 10px;
+            text-align: center;
             position: relative;
+            z-index: 10;
         }
         
         .login-container::before {
@@ -66,188 +63,248 @@
             left: -2px;
             right: -2px;
             bottom: -2px;
-            border: 2px solid #33ccff;
-            border-radius: 6px;
-            pointer-events: none;
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            z-index: -1;
+            animation: borderGlow 3s infinite alternate;
         }
         
-        h1 {
-            text-align: center;
-            color: #ff3366;
+        @keyframes borderGlow {
+            0% { box-shadow: 0 0 5px #00ffff; }
+            100% { box-shadow: 0 0 20px #00ffff; }
+        }
+        
+        .logo {
+            font-size: 2em;
+            color: #ff00ff;
             margin-bottom: 30px;
-            text-shadow: 3px 3px 0 #000;
-            font-size: 24px;
+            text-shadow: 0 0 10px #ff00ff;
         }
         
         .form-group {
             margin-bottom: 20px;
+            text-align: left;
         }
         
         label {
             display: block;
             margin-bottom: 8px;
-            color: #33ccff;
-            font-size: 14px;
-            text-shadow: 2px 2px 0 #000;
+            color: #00ffff;
+            font-size: 0.8em;
         }
         
         input {
             width: 100%;
-            padding: 10px;
-            background-color: #000;
-            border: 2px solid #33ccff;
+            padding: 12px;
+            background-color: #1a1a3a;
+            border: 2px solid #00ffff;
             color: #fff;
-            font-family: 'PixelFont', 'Press Start 2P', monospace;
-            font-size: 14px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.8em;
             box-sizing: border-box;
         }
         
         input:focus {
             outline: none;
-            border-color: #ff3366;
-            box-shadow: 0 0 10px rgba(255, 51, 102, 0.5);
+            border-color: #ff00ff;
+            box-shadow: 0 0 10px #ff00ff;
         }
         
         button {
-            width: 100%;
-            padding: 12px;
-            background-color: #ff3366;
-            border: none;
+            background-color: #ff00ff;
             color: #fff;
-            font-family: 'PixelFont', 'Press Start 2P', monospace;
-            font-size: 16px;
+            border: none;
+            padding: 12px 24px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.9em;
             cursor: pointer;
-            transition: all 0.3s;
             margin-top: 10px;
-            image-rendering: pixelated;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        button::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: 0.5s;
-        }
-        
-        button:hover::after {
-            left: 100%;
+            transition: all 0.3s;
         }
         
         button:hover {
-            background-color: #e62958;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255, 51, 102, 0.4);
+            background-color: #cc00cc;
+            transform: scale(1.05);
+            box-shadow: 0 0 15px #ff00ff;
         }
         
-        .toggle-form {
-            text-align: center;
+        .form-switch {
             margin-top: 20px;
-            font-size: 12px;
+            font-size: 0.7em;
             color: #aaa;
         }
         
-        .toggle-form a {
-            color: #33ccff;
+        .form-switch a {
+            color: #00ffff;
             text-decoration: none;
             cursor: pointer;
         }
         
-        .toggle-form a:hover {
-            color: #ff3366;
+        .form-switch a:hover {
             text-decoration: underline;
+            color: #ff00ff;
         }
         
         .chainsaw-icon {
+            margin: 20px auto;
+            width: 100px;
+            height: 60px;
+            position: relative;
+        }
+        
+        .chainsaw-body {
+            width: 70px;
+            height: 30px;
+            background-color: #ff0000;
+            position: absolute;
+            top: 10px;
+            left: 15px;
+        }
+        
+        .chainsaw-handle {
+            width: 20px;
+            height: 50px;
+            background-color: #888888;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        
+        .chainsaw-blade {
             width: 40px;
-            height: 40px;
-            margin: 0 auto 20px;
-            display: block;
-            image-rendering: pixelated;
+            height: 20px;
+            background-color: #cccccc;
+            position: absolute;
+            top: 15px;
+            right: 0;
+            animation: sawBlade 0.1s infinite alternate;
+        }
+        
+        @keyframes sawBlade {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(2px); }
         }
         
         .message {
+            margin-top: 20px;
             padding: 10px;
-            margin-top: 15px;
-            border-radius: 4px;
-            font-size: 12px;
-            text-align: center;
+            border-radius: 5px;
+            font-size: 0.8em;
             display: none;
-        }
-        
-        .error {
-            background-color: rgba(255, 0, 0, 0.2);
-            border: 1px solid #ff0000;
-            color: #ff6666;
         }
         
         .success {
             background-color: rgba(0, 255, 0, 0.2);
             border: 1px solid #00ff00;
-            color: #66ff66;
+            color: #00ff00;
+        }
+        
+        .error {
+            background-color: rgba(255, 0, 0, 0.2);
+            border: 1px solid #ff0000;
+            color: #ff0000;
+        }
+        
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: transparent;
+            color: #00ffff;
+            border: 2px solid #00ffff;
+            padding: 8px 16px;
+            font-size: 0.7em;
+        }
+        
+        .back-btn:hover {
+            background-color: rgba(0, 255, 255, 0.2);
+        }
+        
+        #login-form, #signup-form {
+            transition: opacity 0.5s, transform 0.5s;
+        }
+        
+        .hidden {
+            opacity: 0;
+            transform: translateY(20px);
+            display: none;
         }
     </style>
 </head>
 <body>
-    <div class="stars" id="stars"></div>
+    <div class="stars"></div>
+    
+    <a href="index.html" class="back-btn">BACK TO GAME</a>
     
     <div class="login-container">
-        <svg class="chainsaw-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="2" y="8" width="20" height="8" fill="#ff0000" />
-            <rect x="4" y="6" width="16" height="2" fill="#ff0000" />
-            <rect x="4" y="16" width="16" height="2" fill="#ff0000" />
-            <rect x="18" y="8" width="4" height="8" fill="#ff0000" />
-            <rect x="22" y="10" width="2" height="4" fill="#ff0000" />
-        </svg>
+        <div class="chainsaw-icon">
+            <div class="chainsaw-handle"></div>
+            <div class="chainsaw-body"></div>
+            <div class="chainsaw-blade"></div>
+        </div>
         
-        <h1 id="form-title">Login to CyberFlap</h1>
+        <div class="logo">CYBER<span style="color: #00ffff;">FLAP</span></div>
         
         <div id="login-form">
+            <h2>Login</h2>
+            
             <div class="form-group">
-                <label for="login-email">Email</label>
+                <label for="login-email">EMAIL</label>
                 <input type="email" id="login-email" required>
             </div>
+            
             <div class="form-group">
-                <label for="login-password">Password</label>
+                <label for="login-password">PASSWORD</label>
                 <input type="password" id="login-password" required>
             </div>
-            <button id="login-button">Login</button>
-            <div class="toggle-form">
-                Don't have an account? <a id="show-signup">Sign up</a>
+            
+            <button id="login-submit">LOGIN</button>
+            
+            <div class="form-switch">
+                Don't have an account? <a id="show-signup">Sign Up</a>
             </div>
+            
+            <div id="login-message" class="message"></div>
         </div>
         
-        <div id="signup-form" style="display: none;">
+        <div id="signup-form" class="hidden">
+            <h2>Sign Up</h2>
+            
             <div class="form-group">
-                <label for="signup-username">Username</label>
+                <label for="signup-username">USERNAME</label>
                 <input type="text" id="signup-username" required>
             </div>
+            
             <div class="form-group">
-                <label for="signup-email">Email</label>
+                <label for="signup-email">EMAIL</label>
                 <input type="email" id="signup-email" required>
             </div>
+            
             <div class="form-group">
-                <label for="signup-password">Password</label>
+                <label for="signup-password">PASSWORD</label>
                 <input type="password" id="signup-password" required>
             </div>
-            <button id="signup-button">Sign Up</button>
-            <div class="toggle-form">
+            
+            <div class="form-group">
+                <label for="signup-confirm">CONFIRM PASSWORD</label>
+                <input type="password" id="signup-confirm" required>
+            </div>
+            
+            <button id="signup-submit">SIGN UP</button>
+            
+            <div class="form-switch">
                 Already have an account? <a id="show-login">Login</a>
             </div>
+            
+            <div id="signup-message" class="message"></div>
         </div>
-        
-        <div id="message" class="message"></div>
     </div>
     
+    <script src="auth.js"></script>
     <script>
         // Create stars background
-        document.addEventListener('DOMContentLoaded', function() {
-            const starsContainer = document.getElementById('stars');
+        function createStars() {
+            const starsContainer = document.querySelector('.stars');
             const starsCount = 100;
             
             for (let i = 0; i < starsCount; i++) {
@@ -255,124 +312,148 @@
                 star.classList.add('star');
                 star.style.top = `${Math.random() * 100}%`;
                 star.style.left = `${Math.random() * 100}%`;
-                star.style.animationDelay = `${Math.random() * 4}s`;
+                star.style.animationDelay = `${Math.random() * 2}s`;
                 starsContainer.appendChild(star);
             }
-            
-            // Check URL parameters to see if we should show signup form
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('signup') === 'true') {
-                document.getElementById('login-form').style.display = 'none';
-                document.getElementById('signup-form').style.display = 'block';
-                document.getElementById('form-title').textContent = 'Sign Up for CyberFlap';
-            }
-            
-            // Form toggle
-            document.getElementById('show-signup').addEventListener('click', function() {
-                document.getElementById('login-form').style.display = 'none';
-                document.getElementById('signup-form').style.display = 'block';
-                document.getElementById('form-title').textContent = 'Sign Up for CyberFlap';
-                hideMessage();
-            });
-            
-            document.getElementById('show-login').addEventListener('click', function() {
+        }
+        
+        // Show login form
+        function showLoginForm() {
+            document.getElementById('signup-form').classList.add('hidden');
+            setTimeout(() => {
+                document.getElementById('login-form').classList.remove('hidden');
                 document.getElementById('signup-form').style.display = 'none';
                 document.getElementById('login-form').style.display = 'block';
-                document.getElementById('form-title').textContent = 'Login to CyberFlap';
-                hideMessage();
-            });
+            }, 300);
+        }
+        
+        // Show signup form
+        function showSignupForm() {
+            document.getElementById('login-form').classList.add('hidden');
+            setTimeout(() => {
+                document.getElementById('signup-form').classList.remove('hidden');
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('signup-form').style.display = 'block';
+            }, 300);
+        }
+        
+        // Show message
+        function showMessage(element, type, message) {
+            element.textContent = message;
+            element.classList.remove('success', 'error');
+            element.classList.add(type);
+            element.style.display = 'block';
             
-            // Login form submission
-            document.getElementById('login-button').addEventListener('click', function() {
-                const email = document.getElementById('login-email').value;
-                const password = document.getElementById('login-password').value;
-                
-                if (!email || !password) {
-                    showMessage('Please fill in all fields', 'error');
-                    return;
-                }
-                
-                // Call login API
-                fetch('/api/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ email, password })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
-                        showMessage(data.error, 'error');
-                    } else {
-                        // Save user data and token to localStorage
-                        localStorage.setItem('user', JSON.stringify(data.user));
-                        localStorage.setItem('token', data.token);
-                        
-                        showMessage('Login successful! Redirecting...', 'success');
-                        
-                        // Redirect to game page after a short delay
-                        setTimeout(() => {
-                            window.location.href = '/';
-                        }, 1500);
-                    }
-                })
-                .catch(error => {
-                    showMessage('An error occurred. Please try again.', 'error');
-                    console.error('Login error:', error);
-                });
-            });
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Handle login
+        async function handleLogin(event) {
+            event.preventDefault();
             
-            // Signup form submission
-            document.getElementById('signup-button').addEventListener('click', function() {
-                const username = document.getElementById('signup-username').value;
-                const email = document.getElementById('signup-email').value;
-                const password = document.getElementById('signup-password').value;
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const messageEl = document.getElementById('login-message');
+            
+            if (!email || !password) {
+                showMessage(messageEl, 'error', 'Please fill in all fields');
+                return;
+            }
+            
+            // For demo purposes, simulate a login
+            // In production, use Auth.loginUser(email, password)
+            try {
+                // Simulated login for demo
+                const userData = {
+                    id: '123456',
+                    username: email.split('@')[0],
+                    email: email
+                };
+                const token = 'demo-token-xyz';
                 
-                if (!username || !email || !password) {
-                    showMessage('Please fill in all fields', 'error');
-                    return;
-                }
+                // Store the login
+                Auth.login(userData, token);
                 
-                // Call register API
-                fetch('/api/register', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ username, email, password })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
-                        showMessage(data.error, 'error');
+                showMessage(messageEl, 'success', 'Login successful! Redirecting...');
+                
+                // Redirect back to game
+                setTimeout(() => {
+                    // Check if we came from the game with a redirect parameter
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const redirectBack = urlParams.get('redirect');
+                    
+                    if (redirectBack) {
+                        window.location.href = redirectBack;
                     } else {
-                        showMessage('Registration successful! Please login.', 'success');
-                        
-                        // Switch to login form after a short delay
-                        setTimeout(() => {
-                            document.getElementById('show-login').click();
-                        }, 1500);
+                        window.location.href = 'index.html';
                     }
-                })
-                .catch(error => {
-                    showMessage('An error occurred. Please try again.', 'error');
-                    console.error('Registration error:', error);
-                });
-            });
+                }, 1500);
+                
+            } catch (error) {
+                showMessage(messageEl, 'error', error.message || 'Login failed');
+            }
+        }
+        
+        // Handle signup
+        async function handleSignup(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('signup-username').value;
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            const confirm = document.getElementById('signup-confirm').value;
+            const messageEl = document.getElementById('signup-message');
+            
+            if (!username || !email || !password || !confirm) {
+                showMessage(messageEl, 'error', 'Please fill in all fields');
+                return;
+            }
+            
+            if (password !== confirm) {
+                showMessage(messageEl, 'error', 'Passwords do not match');
+                return;
+            }
+            
+            // For demo purposes, simulate a registration
+            // In production, use Auth.register(username, email, password)
+            try {
+                // Simulate successful registration
+                showMessage(messageEl, 'success', 'Account created! You can now log in');
+                
+                // Switch to login form after successful registration
+                setTimeout(() => {
+                    showLoginForm();
+                    // Pre-fill email
+                    document.getElementById('login-email').value = email;
+                }, 2000);
+                
+            } catch (error) {
+                showMessage(messageEl, 'error', error.message || 'Registration failed');
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            createStars();
+            
+            // Check URL parameters for showing signup form
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('signup') === 'true') {
+                showSignupForm();
+            } else {
+                showLoginForm();
+            }
+            
+            // Form switching
+            document.getElementById('show-signup').addEventListener('click', showSignupForm);
+            document.getElementById('show-login').addEventListener('click', showLoginForm);
+            
+            // Form submissions
+            document.getElementById('login-submit').addEventListener('click', handleLogin);
+            document.getElementById('signup-submit').addEventListener('click', handleSignup);
         });
-        
-        // Helper functions for showing/hiding messages
-        function showMessage(text, type) {
-            const messageElement = document.getElementById('message');
-            messageElement.textContent = text;
-            messageElement.className = 'message ' + type;
-            messageElement.style.display = 'block';
-        }
-        
-        function hideMessage() {
-            document.getElementById('message').style.display = 'none';
-        }
     </script>
 </body>
 </html> 
