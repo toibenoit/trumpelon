@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CyberFlap Game</title>
+    <title>CyberFlap - Trump vs EPA</title>
     <style>
         body {
             margin: 0;
@@ -12,214 +12,267 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #000;
-            font-family: 'Press Start 2P', monospace;
+            background-color: #0c0c1d;
+            font-family: 'Press Start 2P', cursive;
+            color: #fff;
+            flex-direction: column;
+            position: relative;
             overflow: hidden;
+        }
+        
+        canvas {
+            border: 2px solid #ff00ff;
+            box-shadow: 0 0 15px #ff00ff;
+            background-color: #000;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 2;
         }
         
         #game-container {
             position: relative;
-            width: 800px;
-            height: 600px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         
-        canvas {
-            display: block;
-            background-color: #000;
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
         }
         
-        #user-panel {
+        .star {
             position: absolute;
-            top: 10px;
-            right: 10px;
-            background-color: rgba(0, 0, 0, 0.7);
-            border: 2px solid #ff3366;
-            padding: 10px;
-            border-radius: 5px;
+            width: 2px;
+            height: 2px;
+            background-color: #fff;
+            border-radius: 50%;
+            animation: twinkle 2s infinite;
+        }
+        
+        @keyframes twinkle {
+            0% { opacity: 0.3; }
+            50% { opacity: 1; }
+            100% { opacity: 0.3; }
+        }
+        
+        #bottom-panel {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            padding: 15px 0;
+            background-color: rgba(20, 20, 40, 0.7);
+            border-top: 2px solid #00ffff;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            z-index: 10;
+        }
+        
+        #login-btn, #logout-btn {
+            background-color: #ff00ff;
             color: #fff;
-            font-size: 12px;
-            z-index: 100;
-        }
-        
-        .btn {
-            background-color: #ff3366;
-            color: white;
             border: none;
-            padding: 5px 10px;
-            margin-top: 5px;
+            padding: 10px 20px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.8em;
             cursor: pointer;
-            font-family: 'Press Start 2P', monospace;
-            font-size: 10px;
+            transition: all 0.3s;
+            margin: 0 10px;
         }
         
-        .btn:hover {
-            background-color: #e62958;
+        #login-btn:hover, #logout-btn:hover {
+            background-color: #cc00cc;
+            transform: scale(1.05);
+            box-shadow: 0 0 10px #ff00ff;
+        }
+        
+        #user-info {
+            margin-right: 20px;
+            font-size: 0.8em;
+            color: #00ffff;
         }
         
         #save-status {
-            margin-top: 5px;
-            font-size: 10px;
-            color: #33ccff;
+            margin-left: 20px;
+            font-size: 0.7em;
+            color: #00ff00;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        
+        #save-status.visible {
+            opacity: 1;
+        }
+        
+        .blink {
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        @font-face {
+            font-family: 'Press Start 2P';
+            src: url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
         }
     </style>
 </head>
 <body>
+    <div class="stars"></div>
+    
     <div id="game-container">
-        <canvas id="gameCanvas" width="800" height="600"></canvas>
-        
-        <div id="user-panel">
-            <div id="user-info">Not logged in</div>
-            <button id="login-btn" class="btn">Login</button>
-            <button id="logout-btn" class="btn" style="display: none;">Logout</button>
-            <div id="save-status"></div>
-        </div>
+        <canvas id="gameCanvas" width="480" height="640"></canvas>
     </div>
     
+    <div id="bottom-panel">
+        <div id="user-info"></div>
+        <button id="login-btn">LOGIN / SIGN UP</button>
+        <button id="logout-btn" style="display: none;">LOGOUT</button>
+        <div id="save-status">Game progress saved!</div>
+    </div>
+    
+    <script src="auth.js"></script>
     <script src="game.js"></script>
     <script>
-        // User authentication and game progress handling
-        let currentUser = null;
-        let autoSaveInterval = null;
-        
-        // Check if user is logged in
-        function checkLoginStatus() {
-            const userData = localStorage.getItem('user');
-            const token = localStorage.getItem('token');
+        // Create stars background
+        function createStars() {
+            const starsContainer = document.querySelector('.stars');
+            const starsCount = 100;
             
-            if (userData && token) {
-                currentUser = JSON.parse(userData);
-                document.getElementById('user-info').textContent = `Player: ${currentUser.username}`;
-                document.getElementById('login-btn').style.display = 'none';
-                document.getElementById('logout-btn').style.display = 'block';
-                
-                // Load game progress
-                loadGameProgress();
-                
-                // Set up auto-save
-                autoSaveInterval = setInterval(saveGameProgress, 30000); // Save every 30 seconds
+            for (let i = 0; i < starsCount; i++) {
+                const star = document.createElement('div');
+                star.classList.add('star');
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.animationDelay = `${Math.random() * 2}s`;
+                starsContainer.appendChild(star);
+            }
+        }
+        
+        // Show save status message
+        function showSaveStatus(message = "Game progress saved!") {
+            const saveStatus = document.getElementById('save-status');
+            saveStatus.textContent = message;
+            saveStatus.classList.add('visible');
+            
+            setTimeout(() => {
+                saveStatus.classList.remove('visible');
+            }, 3000);
+        }
+        
+        // Update UI based on login status
+        function updateLoginUI() {
+            const isLoggedIn = Auth.isLoggedIn();
+            const userInfo = document.getElementById('user-info');
+            const loginBtn = document.getElementById('login-btn');
+            const logoutBtn = document.getElementById('logout-btn');
+            
+            if (isLoggedIn) {
+                const user = Auth.getCurrentUser();
+                userInfo.textContent = `${user.username || 'Player'}`;
+                loginBtn.style.display = 'none';
+                logoutBtn.style.display = 'inline-block';
             } else {
-                document.getElementById('user-info').textContent = 'Not logged in';
-                document.getElementById('login-btn').style.display = 'block';
-                document.getElementById('logout-btn').style.display = 'none';
+                userInfo.textContent = '';
+                loginBtn.style.display = 'inline-block';
+                logoutBtn.style.display = 'none';
             }
         }
         
         // Save game progress
-        function saveGameProgress() {
-            if (!currentUser || !window.game) return;
+        async function saveGameProgress() {
+            if (!Auth.isLoggedIn() || !window.game) return;
             
-            const gameData = {
-                userId: currentUser.id,
-                score: window.game.score,
-                chainsawCount: window.game.chainsawCount
-            };
-            
-            fetch('/api/save-progress', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify(gameData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    console.error('Save error:', data.error);
-                    document.getElementById('save-status').textContent = 'Failed to save progress';
+            try {
+                const gameData = {
+                    score: window.game.score || 0,
+                    chainsawCount: window.game.chainsawsCollected || 0
+                };
+                
+                const result = await Auth.saveProgress(gameData);
+                
+                if (result.success) {
+                    console.log('Progress saved:', gameData);
+                    showSaveStatus();
                 } else {
-                    const now = new Date();
-                    const timeStr = now.toLocaleTimeString();
-                    document.getElementById('save-status').textContent = `Progress saved at ${timeStr}`;
-                    
-                    // Hide the status message after 3 seconds
-                    setTimeout(() => {
-                        document.getElementById('save-status').textContent = '';
-                    }, 3000);
+                    console.error('Failed to save progress:', result.error);
                 }
-            })
-            .catch(error => {
-                console.error('Save error:', error);
-                document.getElementById('save-status').textContent = 'Failed to save progress';
-            });
+            } catch (error) {
+                console.error('Error saving progress:', error);
+            }
         }
         
         // Load game progress
-        function loadGameProgress() {
-            if (!currentUser) return;
+        async function loadGameProgress() {
+            if (!Auth.isLoggedIn() || !window.game) return;
             
-            fetch(`/api/get-progress?userId=${currentUser.id}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+            try {
+                const result = await Auth.loadProgress();
+                
+                if (result.success) {
+                    console.log('Progress loaded:', result.progress);
+                    
+                    // We can use this data to potentially show a "best score" banner
+                    // or other information in the future. For now, we just log it.
+                } else {
+                    console.error('Failed to load progress:', result.error);
                 }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    console.error('Load error:', data.error);
-                } else if (window.game) {
-                    // Update game with saved progress
-                    window.game.score = data.score || 0;
-                    window.game.chainsawCount = data.chainsawCount || 0;
-                    console.log('Game progress loaded:', data);
-                }
-            })
-            .catch(error => {
-                console.error('Load error:', error);
-            });
+            } catch (error) {
+                console.error('Error loading progress:', error);
+            }
         }
         
-        // Event listeners
-        document.getElementById('login-btn').addEventListener('click', function() {
-            window.location.href = '/login';
-        });
-        
-        document.getElementById('logout-btn').addEventListener('click', function() {
-            // Clear user data
-            localStorage.removeItem('user');
-            localStorage.removeItem('token');
-            
-            // Clear auto-save interval
-            if (autoSaveInterval) {
-                clearInterval(autoSaveInterval);
-                autoSaveInterval = null;
-            }
-            
-            // Reset game if it exists
-            if (window.game) {
-                window.game.reset();
-            }
-            
-            // Update UI
-            checkLoginStatus();
-        });
-        
-        // Listen for game over events to save progress
-        document.addEventListener('gameOver', function() {
-            if (currentUser) {
-                // Save the current game progress
-                saveGameProgress();
-                
-                // Update UI to show progress was saved
-                const now = new Date();
-                const timeStr = now.toLocaleTimeString();
-                document.getElementById('save-status').textContent = `Progress saved at ${timeStr}`;
-                
-                console.log('Game progress saved on game over');
-                
-                // The message will disappear in 3 seconds to keep the UI clean
-                setTimeout(() => {
-                    document.getElementById('save-status').textContent = '';
-                }, 3000);
-            } else {
-                console.log('User not logged in - progress not saved');
-            }
-        });
-        
         // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            checkLoginStatus();
+        document.addEventListener('DOMContentLoaded', () => {
+            createStars();
+            updateLoginUI();
+            
+            // Login button click
+            document.getElementById('login-btn').addEventListener('click', () => {
+                window.location.href = `login.html?redirect=${encodeURIComponent(window.location.href)}`;
+            });
+            
+            // Logout button click
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                Auth.logout();
+                updateLoginUI();
+                showSaveStatus("Logged out successfully!");
+            });
+            
+            // Auto-save game progress every 30 seconds
+            const autoSaveInterval = setInterval(saveGameProgress, 30000);
+            
+            // Initial load of game progress
+            loadGameProgress();
+            
+            // Listen for login events
+            document.addEventListener('userLogin', (event) => {
+                updateLoginUI();
+                loadGameProgress();
+                showSaveStatus(`Welcome back, ${event.detail.username || 'Player'}!`);
+            });
+            
+            // Listen for logout events
+            document.addEventListener('userLogout', () => {
+                updateLoginUI();
+                showSaveStatus("Logged out successfully!");
+            });
+            
+            // Listen for game over events to save progress
+            document.addEventListener('gameOver', () => {
+                if (Auth.isLoggedIn()) {
+                    saveGameProgress();
+                }
+            });
         });
     </script>
 </body>

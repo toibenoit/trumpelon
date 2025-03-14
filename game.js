@@ -1218,67 +1218,71 @@ class GreenlandParliament {
 
 class Game {
     constructor() {
-        this.state = GAME_STATE.START;
-        this.reset();
+        this.canvas = document.getElementById('gameCanvas');
+        this.ctx = this.canvas.getContext('2d');
         
-        // Add background gradient with pixelated effect
-        this.gradient = ctx.createLinearGradient(0, 0, 0, SCREEN_HEIGHT);
-        this.gradient.addColorStop(0, '#87CEEB');  // Sky blue
-        this.gradient.addColorStop(1, '#E0F6FF');  // Light blue
-        
-        // Add space background gradient for after transformation
-        this.spaceGradient = ctx.createLinearGradient(0, 0, 0, SCREEN_HEIGHT);
-        this.spaceGradient.addColorStop(0, '#000033');  // Deep space blue
-        this.spaceGradient.addColorStop(0.3, '#0A0A3A');  // Dark blue
-        this.spaceGradient.addColorStop(0.7, '#1A0A3A');  // Dark purple
-        this.spaceGradient.addColorStop(1, '#000000');  // Black
-        
-        // Add Greenland sky gradient for second transformation
-        this.greenlandGradient = ctx.createLinearGradient(0, 0, 0, SCREEN_HEIGHT);
-        this.greenlandGradient.addColorStop(0, '#87CEEB');  // Sky blue
-        this.greenlandGradient.addColorStop(0.5, '#B0E0E6');  // Powder blue
-        this.greenlandGradient.addColorStop(1, '#FFFFFF');  // White (for snow)
-        
-        // Create White House
-        this.whiteHouse1 = new WhiteHouse();
-        this.whiteHouse2 = new WhiteHouse();
-        this.whiteHouse2.x = SCREEN_WIDTH + 400; // Position second White House further away
-        
-        // Create SpaceX rocket
-        this.rocket = new SpaceXRocket();
-        
-        // Create Elon Musk and Donald Trump for start screen
-        this.elon = new ElonMusk();
-        this.trump = new DonaldTrump();
-        
-        // Create debt counter
+        this.truck = new Cybertruck();
+        this.towers = [];
+        this.chainsaws = [];
+        this.lastTower = 0;
+        this.lastChainsaw = 0;
+        this.score = 0;
+        this.chainsawsCollected = 0;
+        this.towersSinceLastChainsaw = 0;
+        this.towersUntilNextChainsaw = this.getRandomTowersUntilChainsaw();
         this.nationalDebt = NATIONAL_DEBT;
         this.debtReduction = DEBT_REDUCTION;
-        
-        // Animation variables for start screen
-        this.titleY = 150;
-        this.titleDirection = 1;
-        this.titleSpeed = 0.5;
-        
-        // Transformation thresholds
-        this.firstTransformationThreshold = FIRST_TRANSFORMATION;
-        this.secondTransformationThreshold = SECOND_TRANSFORMATION;
-        this.transformed = false;
-        this.secondTransformed = false;
-
-        // Announcement variables
-        this.announcement = "";
-        this.announcementTime = 0;
-
+        this.state = GAME_STATE.START;
         this.lastFrameTime = Date.now();
         
-        // Stars for space background
+        // Create White House backgrounds
+        this.whiteHouse1 = new WhiteHouse(SCREEN_WIDTH + 50);
+        this.whiteHouse2 = new WhiteHouse(SCREEN_WIDTH + 450);
+        
+        // Create rocket (for title screen animation)
+        this.rocket = new BackgroundRocket();
+        
+        // Create characters for title screen
+        this.elon = new ElonMusk(SCREEN_WIDTH + 200);
+        this.trump = new TrumpCharacter(SCREEN_WIDTH + 100);
+        
+        // Title animation variables
+        this.titleY = 150;
+        this.titleDirection = 1;
+        this.titleSpeed = 0.2;
+        
+        // Set first transformation threshold
+        this.firstTransformationThreshold = FIRST_TRANSFORMATION;
+        this.transformed = false;
+        
+        // Set second transformation threshold
+        this.secondTransformationThreshold = SECOND_TRANSFORMATION;
+        this.secondTransformed = false;
+        
+        // Announcement for transformations
+        this.announcement = '';
+        this.announcementTime = 0;
+        
+        // Stars array for space background
         this.stars = [];
         this.generateStars();
         
-        // Snowflakes for Greenland background
+        // Snowflakes array for Greenland background
         this.snowflakes = [];
         this.generateSnowflakes();
+        
+        // Add game over screen configuration
+        this.gameOverScreen = {
+            visible: false,
+            loginButtonWidth: 150,
+            loginButtonHeight: 40,
+            loginButtonX: 0,
+            loginButtonY: 0,
+            signupButtonWidth: 150,
+            signupButtonHeight: 40,
+            signupButtonX: 0,
+            signupButtonY: 0
+        };
     }
 
     // Generate stars for space background
@@ -1541,6 +1545,31 @@ class Game {
                 this.state = GAME_STATE.GAME_OVER;
             }
         }
+        
+        // Add this near the end of the update method
+        
+        // Check if player has gone off the bottom or top of the screen
+        const playerY = this.secondTransformed 
+            ? this.airForceOne.y 
+            : this.transformed 
+                ? this.playerRocket.y 
+                : this.truck.y;
+        
+        if (playerY > SCREEN_HEIGHT || playerY < -50) {
+            this.state = GAME_STATE.GAME_OVER;
+            document.dispatchEvent(new CustomEvent('gameOver'));
+            
+            // Calculate button positions for the game over screen
+            this.gameOverScreen.visible = true;
+            this.gameOverScreen.loginButtonX = (SCREEN_WIDTH - this.gameOverScreen.loginButtonWidth) / 2;
+            this.gameOverScreen.loginButtonY = SCREEN_HEIGHT - 120;
+            this.gameOverScreen.signupButtonX = (SCREEN_WIDTH - this.gameOverScreen.signupButtonWidth) / 2;
+            this.gameOverScreen.signupButtonY = SCREEN_HEIGHT - 70;
+        }
+    }
+    
+    showDebtReduction() {
+        // This will be called when a tower is passed
     }
     
     showDebtReduction() {
@@ -1761,61 +1790,71 @@ class Game {
             ctx.shadowOffsetY = 0;
         }
 
-        // Draw game over message with better styling
+        // Draw game over screen
         if (this.state === GAME_STATE.GAME_OVER) {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-            ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+            // Semi-transparent overlay
+            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            this.ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
             
-            ctx.fillStyle = 'white';
-            ctx.font = 'bold 36px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText('Game Over!', SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - 70);
+            // Draw game over text
+            this.ctx.fillStyle = '#ff00ff';
+            this.ctx.font = '30px "Press Start 2P", cursive';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText('GAME OVER', SCREEN_WIDTH / 2, SCREEN_HEIGHT / 3);
             
-            ctx.font = '24px Arial';
-            ctx.fillText(`You reduced the debt by $${(this.score * this.debtReduction / 1000000000).toFixed(1)} billion`, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - 30);
+            // Draw score and chainsaw count
+            this.ctx.fillStyle = '#00ffff';
+            this.ctx.font = '16px "Press Start 2P", cursive';
+            this.ctx.fillText(`Score: ${this.score}`, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 3 + 40);
+            this.ctx.fillText(`Chainsaws: ${this.chainsawsCollected}`, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 3 + 70);
             
-            ctx.fillText(`Chainsaws collected: ${this.chainsawCount}`, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + 10);
-            
-            ctx.font = '20px Arial';
-            ctx.fillText('Press SPACE to restart', SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + 50);
-            
-            // Check if user is logged in
-            const userData = localStorage.getItem('user');
-            const token = localStorage.getItem('token');
-            
-            if (userData && token) {
-                // User is logged in, show personalized message
-                const user = JSON.parse(userData);
-                ctx.font = '18px Arial';
-                ctx.fillStyle = '#33ccff';
-                ctx.fillText(`Progress saved for ${user.username}!`, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + 100);
-            } else {
-                // User is not logged in, show login/signup options
-                ctx.font = '18px Arial';
-                ctx.fillStyle = '#ff3366';
-                ctx.fillText('Want to save your progress?', SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + 100);
+            // Draw login/signup buttons only if user is not logged in
+            if (!window.Auth || !window.Auth.isLoggedIn()) {
+                // "Save Your Progress" text
+                this.ctx.fillStyle = '#ffffff';
+                this.ctx.font = '14px "Press Start 2P", cursive';
+                this.ctx.fillText('Save Your Progress', SCREEN_WIDTH / 2, SCREEN_HEIGHT - 150);
                 
                 // Login button
-                this.drawButton('Login', SCREEN_WIDTH/2 - 80, SCREEN_HEIGHT/2 + 130, 70, 30, '#ff3366');
+                this.ctx.fillStyle = '#ff00ff';
+                this.ctx.fillRect(
+                    this.gameOverScreen.loginButtonX,
+                    this.gameOverScreen.loginButtonY,
+                    this.gameOverScreen.loginButtonWidth,
+                    this.gameOverScreen.loginButtonHeight
+                );
                 
-                // Sign up button
-                this.drawButton('Sign Up', SCREEN_WIDTH/2 + 10, SCREEN_HEIGHT/2 + 130, 70, 30, '#ff3366');
+                this.ctx.fillStyle = '#ffffff';
+                this.ctx.font = '12px "Press Start 2P", cursive';
+                this.ctx.fillText('LOGIN', SCREEN_WIDTH / 2, this.gameOverScreen.loginButtonY + 25);
                 
-                // Store button positions for click handling
-                this.loginButtonPos = {
-                    x: SCREEN_WIDTH/2 - 80,
-                    y: SCREEN_HEIGHT/2 + 130,
-                    width: 70,
-                    height: 30
-                };
+                // Signup button
+                this.ctx.fillStyle = '#00ffff';
+                this.ctx.fillRect(
+                    this.gameOverScreen.signupButtonX,
+                    this.gameOverScreen.signupButtonY,
+                    this.gameOverScreen.signupButtonWidth,
+                    this.gameOverScreen.signupButtonHeight
+                );
                 
-                this.signupButtonPos = {
-                    x: SCREEN_WIDTH/2 + 10,
-                    y: SCREEN_HEIGHT/2 + 130,
-                    width: 70,
-                    height: 30
-                };
+                this.ctx.fillStyle = '#ffffff';
+                this.ctx.font = '12px "Press Start 2P", cursive';
+                this.ctx.fillText('SIGN UP', SCREEN_WIDTH / 2, this.gameOverScreen.signupButtonY + 25);
+            } else {
+                // Show message for logged in users
+                const user = window.Auth.getCurrentUser();
+                this.ctx.fillStyle = '#00ff00';
+                this.ctx.font = '14px "Press Start 2P", cursive';
+                this.ctx.fillText('Progress Saved!', SCREEN_WIDTH / 2, SCREEN_HEIGHT - 120);
+                this.ctx.fillStyle = '#ffffff';
+                this.ctx.font = '12px "Press Start 2P", cursive';
+                this.ctx.fillText(`Thanks for playing, ${user.username || 'Player'}!`, SCREEN_WIDTH / 2, SCREEN_HEIGHT - 90);
             }
+            
+            // Press any key to restart text
+            this.ctx.fillStyle = '#ffffff';
+            this.ctx.font = '12px "Press Start 2P", cursive';
+            this.ctx.fillText('Press any key to restart', SCREEN_WIDTH / 2, SCREEN_HEIGHT - 30);
         }
     }
     
@@ -1867,10 +1906,50 @@ class Game {
         ctx.textBaseline = 'middle';
         ctx.fillText(text, x + width/2, y + height/2);
     }
+
+    // Add helper method to Game class
+    checkCollisionRects(rect1, rect2) {
+        return rect1.x < rect2.x + rect2.width &&
+            rect1.x + rect1.width > rect2.x &&
+            rect1.y < rect2.y + rect2.height &&
+            rect1.y + rect1.height > rect2.y;
+    }
 }
 
 // Initialize game
 const game = new Game();
+window.game = game; // Make game globally accessible
+
+// Add event listener for clicks on the game over buttons
+canvas.addEventListener('click', (event) => {
+    // Only process clicks when game is over and buttons are visible
+    if (game.state === GAME_STATE.GAME_OVER && 
+        (!window.Auth || !window.Auth.isLoggedIn())) {
+        
+        // Get click coordinates relative to canvas
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        
+        // Check if login button was clicked
+        if (x >= game.gameOverScreen.loginButtonX && 
+            x <= game.gameOverScreen.loginButtonX + game.gameOverScreen.loginButtonWidth &&
+            y >= game.gameOverScreen.loginButtonY && 
+            y <= game.gameOverScreen.loginButtonY + game.gameOverScreen.loginButtonHeight) {
+            
+            window.location.href = `login.html?redirect=${encodeURIComponent(window.location.href)}`;
+        }
+        
+        // Check if signup button was clicked
+        if (x >= game.gameOverScreen.signupButtonX && 
+            x <= game.gameOverScreen.signupButtonX + game.gameOverScreen.signupButtonWidth &&
+            y >= game.gameOverScreen.signupButtonY && 
+            y <= game.gameOverScreen.signupButtonY + game.gameOverScreen.signupButtonHeight) {
+            
+            window.location.href = `login.html?signup=true&redirect=${encodeURIComponent(window.location.href)}`;
+        }
+    }
+});
 
 // Game loop
 function gameLoop() {
