@@ -1297,6 +1297,35 @@ class Game {
         this.chainsawCount = 0;
         this.towersSpawned = 0;  // Add counter for towers spawned
         this.chainsaws = [];  // Array to store chainsaw objects
+        
+        // Stars for space background
+        this.stars = [];
+        this.generateStars();
+    }
+
+    // Generate stars for space background
+    generateStars() {
+        // Create 100 stars with random positions and sizes
+        for (let i = 0; i < 100; i++) {
+            this.stars.push({
+                x: Math.random() * SCREEN_WIDTH,
+                y: Math.random() * SCREEN_HEIGHT,
+                size: Math.random() * 2 + 1,
+                brightness: Math.random()
+            });
+        }
+    }
+    
+    // Draw stars in space background
+    drawStars() {
+        for (let star of this.stars) {
+            // Make stars twinkle by varying opacity
+            const twinkle = 0.5 + Math.sin(Date.now() / 1000 + star.brightness * 10) * 0.5;
+            ctx.fillStyle = `rgba(255, 255, 255, ${0.5 + twinkle * 0.5})`;
+            ctx.beginPath();
+            ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
     }
 
     reset() {
@@ -1332,6 +1361,10 @@ class Game {
         }
         
         this.transformed = false;
+        
+        // Reset stars for space background
+        this.stars = [];
+        this.generateStars();
     }
 
     updateScore() {
@@ -1527,6 +1560,11 @@ class Game {
         ctx.fillStyle = this.gradient;
         ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
         
+        // Draw stars if player has unlocked transformation
+        if (this.score >= this.transformationThreshold) {
+            this.drawStars();
+        }
+        
         // Draw rocket (in background)
         this.rocket.draw();
         
@@ -1721,6 +1759,11 @@ class Game {
         // Draw sky gradient background
         ctx.fillStyle = this.gradient;
         ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+        
+        // Draw stars in space background when transformed
+        if (this.transformed) {
+            this.drawStars();
+        }
         
         // Draw rocket (in background)
         this.rocket.draw();
