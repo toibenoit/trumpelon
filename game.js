@@ -20,7 +20,6 @@ const GAME_STATE = {
 // Get canvas and context
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-const scoreElement = document.getElementById('score');
 
 // Load sound effects
 const thrusterSound = new Audio('https://assets.mixkit.co/active_storage/sfx/212/212-preview.mp3');
@@ -992,6 +991,13 @@ class Game {
         this.gradient.addColorStop(0, '#87CEEB');  // Sky blue
         this.gradient.addColorStop(1, '#E0F6FF');  // Light blue
         
+        // Add space background gradient for after transformation
+        this.spaceGradient = ctx.createLinearGradient(0, 0, 0, SCREEN_HEIGHT);
+        this.spaceGradient.addColorStop(0, '#000033');  // Deep space blue
+        this.spaceGradient.addColorStop(0.3, '#0A0A3A');  // Dark blue
+        this.spaceGradient.addColorStop(0.7, '#1A0A3A');  // Dark purple
+        this.spaceGradient.addColorStop(1, '#000000');  // Black
+        
         // Create White House
         this.whiteHouse1 = new WhiteHouse();
         this.whiteHouse2 = new WhiteHouse();
@@ -1022,6 +1028,35 @@ class Game {
         this.announcementTime = 0;
 
         this.lastFrameTime = Date.now();
+        
+        // Stars for space background
+        this.stars = [];
+        this.generateStars();
+    }
+
+    // Generate stars for space background
+    generateStars() {
+        // Create 100 stars with random positions and sizes
+        for (let i = 0; i < 100; i++) {
+            this.stars.push({
+                x: Math.random() * SCREEN_WIDTH,
+                y: Math.random() * SCREEN_HEIGHT,
+                size: Math.random() * 2 + 1,
+                brightness: Math.random()
+            });
+        }
+    }
+    
+    // Draw stars in space background
+    drawStars() {
+        for (let star of this.stars) {
+            // Make stars twinkle by varying opacity
+            const twinkle = 0.5 + Math.sin(Date.now() / 1000 + star.brightness * 10) * 0.5;
+            ctx.fillStyle = `rgba(255, 255, 255, ${0.5 + twinkle * 0.5})`;
+            ctx.beginPath();
+            ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
     }
 
     reset() {
@@ -1057,7 +1092,10 @@ class Game {
     }
 
     updateScore() {
-        scoreElement.textContent = `Score: ${this.score} | Debt: $${(this.nationalDebt / 1000000000000).toFixed(2)} trillion`;
+        // Remove updating the external score element
+        // scoreElement.textContent = `Score: ${this.score} | Debt: $${(this.nationalDebt / 1000000000000).toFixed(2)} trillion`;
+        
+        // We'll now draw the score directly on the canvas in the draw method
     }
 
     checkCollision(rect1, rect2) {
@@ -1110,6 +1148,10 @@ class Game {
                 this.towers.push(new EPABuilding());
                 this.lastTower = currentTime;
             }
+            
+            // Show transformation announcement
+            this.announcement = "Cybertruck Transformed to Falcon 9!";
+            this.announcementTime = Date.now();
         }
         
         // Update player based on transformation state
@@ -1299,16 +1341,32 @@ class Game {
             return;
         }
         
-        // Draw sky gradient background
-        ctx.fillStyle = this.gradient;
-        ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+        // Draw background based on transformation state
+        if (this.transformed) {
+            // Space background after transformation
+            ctx.fillStyle = this.spaceGradient;
+            ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+            
+            // Draw stars
+            this.drawStars();
+        } else {
+            // Sky gradient background before transformation
+            ctx.fillStyle = this.gradient;
+            ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+        }
         
         // Draw rocket (in background)
         this.rocket.draw();
         
-        // Draw ground
-        ctx.fillStyle = '#8BC34A';
-        ctx.fillRect(0, SCREEN_HEIGHT - 20, SCREEN_WIDTH, 20);
+        // Draw ground only if not transformed
+        if (!this.transformed) {
+            ctx.fillStyle = '#8BC34A';
+            ctx.fillRect(0, SCREEN_HEIGHT - 20, SCREEN_WIDTH, 20);
+            
+            // Draw White Houses (background) only before transformation
+            this.whiteHouse1.draw();
+            this.whiteHouse2.draw();
+        }
         
         // Draw game objects
         if (this.transformed) {
@@ -1320,6 +1378,9 @@ class Game {
         for (const tower of this.towers) {
             tower.draw();
         }
+        
+        // Draw score and debt counter inside the game canvas
+        this.drawScoreCounter();
         
         // Draw debt reduction animation if active
         if (this.showingDebtReduction && Date.now() - this.debtReductionTime < 1000) {
@@ -1371,6 +1432,28 @@ class Game {
             ctx.font = '20px Arial';
             ctx.fillText('Press SPACE to restart', SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + 50);
         }
+    }
+    
+    // New method to draw the score counter inside the game canvas
+    drawScoreCounter() {
+        // Create a semi-transparent background for the score
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fillRect(10, 10, SCREEN_WIDTH - 20, 40);
+        
+        // Add a border
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(10, 10, SCREEN_WIDTH - 20, 40);
+        
+        // Draw score text
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 16px Arial';
+        ctx.textAlign = 'left';
+        ctx.fillText(`Score: ${this.score}`, 20, 30);
+        
+        // Draw debt text
+        ctx.textAlign = 'right';
+        ctx.fillText(`Debt: $${(this.nationalDebt / 1000000000000).toFixed(2)}T`, SCREEN_WIDTH - 20, 30);
     }
 }
 
