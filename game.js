@@ -1,5 +1,5 @@
 // Game constants
-const SCREEN_WIDTH = 400;
+const SCREEN_WIDTH = 800; // Updated to match new canvas size
 const SCREEN_HEIGHT = 600;
 const GRAVITY = 0.35;
 const FLAP_STRENGTH = -8;
@@ -10,6 +10,8 @@ const NATIONAL_DEBT = 34000000000000; // $34 trillion starting debt
 const DEBT_REDUCTION = 10000000000; // $10 billion per obstacle
 const DEBUG_MODE = false; // Disable debug mode
 const CHAINSAW_FREQUENCY = 800; // Increased frequency of chainsaw spawns in ms
+const MIN_TOWERS_BEFORE_CHAINSAW = 3; // Minimum number of towers before a chainsaw appears
+const MAX_TOWERS_BEFORE_CHAINSAW = 5; // Maximum number of towers before a chainsaw appears
 
 // Game states
 const GAME_STATE = {
@@ -1151,6 +1153,10 @@ class Game {
         this.chainsaws = [];
         this.lastChainsaw = 0;
         this.chainsawCount = 0;
+        
+        // Add counter for tower spawns since last chainsaw
+        this.towersSinceLastChainsaw = 0;
+        this.towersUntilNextChainsaw = this.getRandomTowersUntilChainsaw();
     }
 
     // Generate stars for space background
@@ -1212,6 +1218,10 @@ class Game {
         this.chainsaws = [];
         this.lastChainsaw = 0;
         this.chainsawCount = 0;
+        
+        // Reset chainsaw counters
+        this.towersSinceLastChainsaw = 0;
+        this.towersUntilNextChainsaw = this.getRandomTowersUntilChainsaw();
     }
 
     updateScore() {
@@ -1299,8 +1309,11 @@ class Game {
             this.towers.push(newTower);
             this.lastTower = currentTime;
             
-            // Add chainsaw in the gap between top and bottom of tower (1 in 3 chance)
-            if (Math.random() < 0.33) {
+            // Increment tower counter
+            this.towersSinceLastChainsaw++;
+            
+            // Check if it's time to spawn a chainsaw
+            if (this.towersSinceLastChainsaw >= this.towersUntilNextChainsaw) {
                 // Position in the middle of the gap
                 const gapY = newTower.gap_y;
                 const chainsaw = new Chainsaw(
@@ -1309,6 +1322,12 @@ class Game {
                 );
                 this.chainsaws.push(chainsaw);
                 this.lastChainsaw = currentTime;
+                
+                // Reset counters
+                this.towersSinceLastChainsaw = 0;
+                this.towersUntilNextChainsaw = this.getRandomTowersUntilChainsaw();
+                
+                console.log(`Next chainsaw will appear after ${this.towersUntilNextChainsaw} towers`);
             }
         }
 
@@ -1346,6 +1365,8 @@ class Game {
             for (const towerRect of tower.getRects()) {
                 if (this.checkCollision(playerRect, towerRect)) {
                     this.state = GAME_STATE.GAME_OVER;
+                    // Dispatch game over event
+                    document.dispatchEvent(new CustomEvent('gameOver'));
                     return;
                 }
             }
@@ -1384,10 +1405,14 @@ class Game {
         if (this.transformed) {
             if (this.playerRocket.y < 0 || this.playerRocket.y > SCREEN_HEIGHT) {
                 this.state = GAME_STATE.GAME_OVER;
+                // Dispatch game over event
+                document.dispatchEvent(new CustomEvent('gameOver'));
             }
         } else {
             if (this.truck.y < 0 || this.truck.y > SCREEN_HEIGHT) {
                 this.state = GAME_STATE.GAME_OVER;
+                // Dispatch game over event
+                document.dispatchEvent(new CustomEvent('gameOver'));
             }
         }
     }
@@ -1696,10 +1721,18 @@ class Game {
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 0;
     }
+
+    // Helper method to get random number of towers until next chainsaw
+    getRandomTowersUntilChainsaw() {
+        return MIN_TOWERS_BEFORE_CHAINSAW + 
+            Math.floor(Math.random() * (MAX_TOWERS_BEFORE_CHAINSAW - MIN_TOWERS_BEFORE_CHAINSAW + 1));
+    }
 }
 
 // Initialize game
 const game = new Game();
+// Make game accessible globally
+window.game = game;
 
 // Game loop
 function gameLoop() {

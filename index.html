@@ -3,58 +3,209 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CyberFlap - Save the Economy!</title>
+    <title>CyberFlap Game</title>
     <style>
         body {
             margin: 0;
             padding: 0;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #1a1a1a;
-            font-family: Arial, sans-serif;
-            color: white;
+            background-color: #000;
+            font-family: 'Press Start 2P', monospace;
+            overflow: hidden;
         }
         
-        #gameContainer {
+        #game-container {
             position: relative;
-            margin: 20px auto;
+            width: 800px;
+            height: 600px;
         }
         
-        #gameCanvas {
-            border: 3px solid #333;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        canvas {
+            display: block;
+            background-color: #000;
         }
         
-        h1 {
-            color: #FF3D00;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        #user-panel {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border: 2px solid #ff3366;
+            padding: 10px;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 12px;
+            z-index: 100;
         }
         
-        .instructions {
-            margin-top: 20px;
-            text-align: center;
-            max-width: 500px;
-            font-size: 14px;
-            color: #aaa;
+        .btn {
+            background-color: #ff3366;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            margin-top: 5px;
+            cursor: pointer;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 10px;
+        }
+        
+        .btn:hover {
+            background-color: #e62958;
+        }
+        
+        #save-status {
+            margin-top: 5px;
+            font-size: 10px;
+            color: #33ccff;
         }
     </style>
 </head>
 <body>
-    <h1>CyberFlap</h1>
-    
-    <div id="gameContainer">
-        <canvas id="gameCanvas" width="400" height="600"></canvas>
-    </div>
-    
-    <div class="instructions">
-        <p>Help Elon Musk reduce the national debt by navigating through obstacles!</p>
-        <p>Press SPACE to jump. After 30 obstacles, transform into a Falcon 9 rocket!</p>
-        <p>Debug keys: T (test transformation), F (start as Falcon 9), D (debug mode)</p>
+    <div id="game-container">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div id="user-panel">
+            <div id="user-info">Not logged in</div>
+            <button id="login-btn" class="btn">Login</button>
+            <button id="logout-btn" class="btn" style="display: none;">Logout</button>
+            <div id="save-status"></div>
+        </div>
     </div>
     
     <script src="game.js"></script>
+    <script>
+        // User authentication and game progress handling
+        let currentUser = null;
+        let autoSaveInterval = null;
+        
+        // Check if user is logged in
+        function checkLoginStatus() {
+            const userData = localStorage.getItem('user');
+            const token = localStorage.getItem('token');
+            
+            if (userData && token) {
+                currentUser = JSON.parse(userData);
+                document.getElementById('user-info').textContent = `Player: ${currentUser.username}`;
+                document.getElementById('login-btn').style.display = 'none';
+                document.getElementById('logout-btn').style.display = 'block';
+                
+                // Load game progress
+                loadGameProgress();
+                
+                // Set up auto-save
+                autoSaveInterval = setInterval(saveGameProgress, 30000); // Save every 30 seconds
+            } else {
+                document.getElementById('user-info').textContent = 'Not logged in';
+                document.getElementById('login-btn').style.display = 'block';
+                document.getElementById('logout-btn').style.display = 'none';
+            }
+        }
+        
+        // Save game progress
+        function saveGameProgress() {
+            if (!currentUser || !window.game) return;
+            
+            const gameData = {
+                userId: currentUser.id,
+                score: window.game.score,
+                chainsawCount: window.game.chainsawCount
+            };
+            
+            fetch('/api/save-progress', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(gameData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.error('Save error:', data.error);
+                    document.getElementById('save-status').textContent = 'Failed to save progress';
+                } else {
+                    const now = new Date();
+                    const timeStr = now.toLocaleTimeString();
+                    document.getElementById('save-status').textContent = `Progress saved at ${timeStr}`;
+                    
+                    // Hide the status message after 3 seconds
+                    setTimeout(() => {
+                        document.getElementById('save-status').textContent = '';
+                    }, 3000);
+                }
+            })
+            .catch(error => {
+                console.error('Save error:', error);
+                document.getElementById('save-status').textContent = 'Failed to save progress';
+            });
+        }
+        
+        // Load game progress
+        function loadGameProgress() {
+            if (!currentUser) return;
+            
+            fetch(`/api/get-progress?userId=${currentUser.id}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.error('Load error:', data.error);
+                } else if (window.game) {
+                    // Update game with saved progress
+                    window.game.score = data.score || 0;
+                    window.game.chainsawCount = data.chainsawCount || 0;
+                    console.log('Game progress loaded:', data);
+                }
+            })
+            .catch(error => {
+                console.error('Load error:', error);
+            });
+        }
+        
+        // Event listeners
+        document.getElementById('login-btn').addEventListener('click', function() {
+            window.location.href = '/login';
+        });
+        
+        document.getElementById('logout-btn').addEventListener('click', function() {
+            // Clear user data
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            
+            // Clear auto-save interval
+            if (autoSaveInterval) {
+                clearInterval(autoSaveInterval);
+                autoSaveInterval = null;
+            }
+            
+            // Reset game if it exists
+            if (window.game) {
+                window.game.reset();
+            }
+            
+            // Update UI
+            checkLoginStatus();
+        });
+        
+        // Listen for game over events to save progress
+        document.addEventListener('gameOver', function() {
+            if (currentUser) {
+                saveGameProgress();
+            }
+        });
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            checkLoginStatus();
+        });
+    </script>
 </body>
 </html> 

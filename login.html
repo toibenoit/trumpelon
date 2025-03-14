@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberFlap - Login</title>
+    <style>
+        @font-face {
+            font-family: 'PixelFont';
+            src: url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0a0a1a;
+            color: #fff;
+            font-family: 'PixelFont', 'Press Start 2P', monospace;
+            overflow: hidden;
+            position: relative;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        
+        .star {
+            position: absolute;
+            background-color: #fff;
+            width: 2px;
+            height: 2px;
+            border-radius: 50%;
+            animation: twinkle 4s infinite;
+        }
+        
+        @keyframes twinkle {
+            0% { opacity: 0.2; }
+            50% { opacity: 1; }
+            100% { opacity: 0.2; }
+        }
+        
+        .login-container {
+            background-color: rgba(20, 20, 40, 0.8);
+            border: 4px solid #ff3366;
+            border-radius: 8px;
+            padding: 30px;
+            width: 320px;
+            box-shadow: 0 0 20px rgba(255, 51, 102, 0.5);
+            image-rendering: pixelated;
+            position: relative;
+        }
+        
+        .login-container::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            border: 2px solid #33ccff;
+            border-radius: 6px;
+            pointer-events: none;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #ff3366;
+            margin-bottom: 30px;
+            text-shadow: 3px 3px 0 #000;
+            font-size: 24px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #33ccff;
+            font-size: 14px;
+            text-shadow: 2px 2px 0 #000;
+        }
+        
+        input {
+            width: 100%;
+            padding: 10px;
+            background-color: #000;
+            border: 2px solid #33ccff;
+            color: #fff;
+            font-family: 'PixelFont', 'Press Start 2P', monospace;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #ff3366;
+            box-shadow: 0 0 10px rgba(255, 51, 102, 0.5);
+        }
+        
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #ff3366;
+            border: none;
+            color: #fff;
+            font-family: 'PixelFont', 'Press Start 2P', monospace;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+            image-rendering: pixelated;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        button::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+        
+        button:hover::after {
+            left: 100%;
+        }
+        
+        button:hover {
+            background-color: #e62958;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 51, 102, 0.4);
+        }
+        
+        .toggle-form {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #aaa;
+        }
+        
+        .toggle-form a {
+            color: #33ccff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        .toggle-form a:hover {
+            color: #ff3366;
+            text-decoration: underline;
+        }
+        
+        .chainsaw-icon {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 20px;
+            display: block;
+            image-rendering: pixelated;
+        }
+        
+        .message {
+            padding: 10px;
+            margin-top: 15px;
+            border-radius: 4px;
+            font-size: 12px;
+            text-align: center;
+            display: none;
+        }
+        
+        .error {
+            background-color: rgba(255, 0, 0, 0.2);
+            border: 1px solid #ff0000;
+            color: #ff6666;
+        }
+        
+        .success {
+            background-color: rgba(0, 255, 0, 0.2);
+            border: 1px solid #00ff00;
+            color: #66ff66;
+        }
+    </style>
+</head>
+<body>
+    <div class="stars" id="stars"></div>
+    
+    <div class="login-container">
+        <svg class="chainsaw-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="2" y="8" width="20" height="8" fill="#ff0000" />
+            <rect x="4" y="6" width="16" height="2" fill="#ff0000" />
+            <rect x="4" y="16" width="16" height="2" fill="#ff0000" />
+            <rect x="18" y="8" width="4" height="8" fill="#ff0000" />
+            <rect x="22" y="10" width="2" height="4" fill="#ff0000" />
+        </svg>
+        
+        <h1 id="form-title">Login to CyberFlap</h1>
+        
+        <div id="login-form">
+            <div class="form-group">
+                <label for="login-email">Email</label>
+                <input type="email" id="login-email" required>
+            </div>
+            <div class="form-group">
+                <label for="login-password">Password</label>
+                <input type="password" id="login-password" required>
+            </div>
+            <button id="login-button">Login</button>
+            <div class="toggle-form">
+                Don't have an account? <a id="show-signup">Sign up</a>
+            </div>
+        </div>
+        
+        <div id="signup-form" style="display: none;">
+            <div class="form-group">
+                <label for="signup-username">Username</label>
+                <input type="text" id="signup-username" required>
+            </div>
+            <div class="form-group">
+                <label for="signup-email">Email</label>
+                <input type="email" id="signup-email" required>
+            </div>
+            <div class="form-group">
+                <label for="signup-password">Password</label>
+                <input type="password" id="signup-password" required>
+            </div>
+            <button id="signup-button">Sign Up</button>
+            <div class="toggle-form">
+                Already have an account? <a id="show-login">Login</a>
+            </div>
+        </div>
+        
+        <div id="message" class="message"></div>
+    </div>
+    
+    <script>
+        // Create stars background
+        document.addEventListener('DOMContentLoaded', function() {
+            const starsContainer = document.getElementById('stars');
+            const starsCount = 100;
+            
+            for (let i = 0; i < starsCount; i++) {
+                const star = document.createElement('div');
+                star.classList.add('star');
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.animationDelay = `${Math.random() * 4}s`;
+                starsContainer.appendChild(star);
+            }
+            
+            // Form toggle
+            document.getElementById('show-signup').addEventListener('click', function() {
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('signup-form').style.display = 'block';
+                document.getElementById('form-title').textContent = 'Sign Up for CyberFlap';
+                hideMessage();
+            });
+            
+            document.getElementById('show-login').addEventListener('click', function() {
+                document.getElementById('signup-form').style.display = 'none';
+                document.getElementById('login-form').style.display = 'block';
+                document.getElementById('form-title').textContent = 'Login to CyberFlap';
+                hideMessage();
+            });
+            
+            // Login form submission
+            document.getElementById('login-button').addEventListener('click', function() {
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
+                
+                if (!email || !password) {
+                    showMessage('Please fill in all fields', 'error');
+                    return;
+                }
+                
+                // Call login API
+                fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        showMessage(data.error, 'error');
+                    } else {
+                        // Save user data and token to localStorage
+                        localStorage.setItem('user', JSON.stringify(data.user));
+                        localStorage.setItem('token', data.token);
+                        
+                        showMessage('Login successful! Redirecting...', 'success');
+                        
+                        // Redirect to game page after a short delay
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 1500);
+                    }
+                })
+                .catch(error => {
+                    showMessage('An error occurred. Please try again.', 'error');
+                    console.error('Login error:', error);
+                });
+            });
+            
+            // Signup form submission
+            document.getElementById('signup-button').addEventListener('click', function() {
+                const username = document.getElementById('signup-username').value;
+                const email = document.getElementById('signup-email').value;
+                const password = document.getElementById('signup-password').value;
+                
+                if (!username || !email || !password) {
+                    showMessage('Please fill in all fields', 'error');
+                    return;
+                }
+                
+                // Call register API
+                fetch('/api/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, email, password })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        showMessage(data.error, 'error');
+                    } else {
+                        showMessage('Registration successful! Please login.', 'success');
+                        
+                        // Switch to login form after a short delay
+                        setTimeout(() => {
+                            document.getElementById('show-login').click();
+                        }, 1500);
+                    }
+                })
+                .catch(error => {
+                    showMessage('An error occurred. Please try again.', 'error');
+                    console.error('Registration error:', error);
+                });
+            });
+        });
+        
+        // Helper functions for showing/hiding messages
+        function showMessage(text, type) {
+            const messageElement = document.getElementById('message');
+            messageElement.textContent = text;
+            messageElement.className = 'message ' + type;
+            messageElement.style.display = 'block';
+        }
+        
+        function hideMessage() {
+            document.getElementById('message').style.display = 'none';
+        }
+    </script>
+</body>
+</html> 
