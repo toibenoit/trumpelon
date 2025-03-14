@@ -71,6 +71,119 @@ function drawSpaceXLogo(ctx, x, y, scale = 1) {
     ctx.fillText('SPACEX', x, y);
 }
 
+// Helper function to draw pixelated numbers for chainsaw counter
+function drawPixelatedNumber(ctx, number, x, y, pixelSize) {
+    const digits = number.toString().split('');
+    let currentX = x;
+    
+    // Define the pixel patterns for each digit (0-9)
+    const digitPatterns = [
+        // 0
+        [
+            [1, 1, 1],
+            [1, 0, 1],
+            [1, 0, 1],
+            [1, 0, 1],
+            [1, 1, 1]
+        ],
+        // 1
+        [
+            [0, 1, 0],
+            [1, 1, 0],
+            [0, 1, 0],
+            [0, 1, 0],
+            [1, 1, 1]
+        ],
+        // 2
+        [
+            [1, 1, 1],
+            [0, 0, 1],
+            [1, 1, 1],
+            [1, 0, 0],
+            [1, 1, 1]
+        ],
+        // 3
+        [
+            [1, 1, 1],
+            [0, 0, 1],
+            [1, 1, 1],
+            [0, 0, 1],
+            [1, 1, 1]
+        ],
+        // 4
+        [
+            [1, 0, 1],
+            [1, 0, 1],
+            [1, 1, 1],
+            [0, 0, 1],
+            [0, 0, 1]
+        ],
+        // 5
+        [
+            [1, 1, 1],
+            [1, 0, 0],
+            [1, 1, 1],
+            [0, 0, 1],
+            [1, 1, 1]
+        ],
+        // 6
+        [
+            [1, 1, 1],
+            [1, 0, 0],
+            [1, 1, 1],
+            [1, 0, 1],
+            [1, 1, 1]
+        ],
+        // 7
+        [
+            [1, 1, 1],
+            [0, 0, 1],
+            [0, 0, 1],
+            [0, 0, 1],
+            [0, 0, 1]
+        ],
+        // 8
+        [
+            [1, 1, 1],
+            [1, 0, 1],
+            [1, 1, 1],
+            [1, 0, 1],
+            [1, 1, 1]
+        ],
+        // 9
+        [
+            [1, 1, 1],
+            [1, 0, 1],
+            [1, 1, 1],
+            [0, 0, 1],
+            [1, 1, 1]
+        ]
+    ];
+    
+    // Draw each digit
+    for (let i = 0; i < digits.length; i++) {
+        const digit = parseInt(digits[i]);
+        const pattern = digitPatterns[digit];
+        
+        // Draw the digit pattern
+        for (let row = 0; row < pattern.length; row++) {
+            for (let col = 0; col < pattern[0].length; col++) {
+                if (pattern[row][col] === 1) {
+                    ctx.fillRect(
+                        currentX + col * pixelSize,
+                        y + row * pixelSize,
+                        pixelSize,
+                        pixelSize
+                    );
+                }
+            }
+        }
+        
+        // Move to the next digit position (with space between digits)
+        currentX += pattern[0].length * pixelSize + pixelSize;
+    }
+}
+
 class Cybertruck {
     constructor() {
         this.x = SCREEN_WIDTH / 3;
@@ -265,8 +378,9 @@ class TrumpTower {
         this.bottom_height = SCREEN_HEIGHT - (this.gap_y + PIPE_GAP / 2);
     }
 
-    update() {
-        this.x -= PIPE_SPEED;
+    update(deltaTime = 1) {
+        // The original logic for direct movement was commented out
+        // We now rely on Game class to apply deltaTime-based movement
     }
 
     draw() {
@@ -377,8 +491,9 @@ class EPABuilding {
         this.bottom_height = SCREEN_HEIGHT - (this.gap_y + PIPE_GAP / 2);
     }
 
-    update() {
-        this.x -= PIPE_SPEED;
+    update(deltaTime = 1) {
+        // The original logic for direct movement was commented out
+        // We now rely on Game class to apply deltaTime-based movement
     }
 
     draw() {
@@ -519,8 +634,8 @@ class WhiteHouse {
         this.flag = new AmericanFlag(this.x + this.width/2, this.y - 30, 25, 15);
     }
 
-    update() {
-        this.x -= this.speed;
+    update(deltaTime = 1) {
+        this.x -= this.speed * deltaTime;
         if (this.x < -this.width) {
             this.x = SCREEN_WIDTH + Math.random() * 300; // Random respawn distance
         }
@@ -588,10 +703,10 @@ class SpaceXRocket {
         this.flameAnimation = 0;
     }
     
-    update() {
-        this.x -= this.speed;
-        this.y -= this.speed / 3; // Moving diagonally upward
-        this.flameAnimation = (this.flameAnimation + 1) % 6; // Animate flame
+    update(deltaTime = 1) {
+        this.x -= this.speed * deltaTime;
+        this.y -= (this.speed / 3) * deltaTime; // Moving diagonally upward
+        this.flameAnimation = (this.flameAnimation + 0.2 * deltaTime) % 6; // Animate flame
         
         if (this.x < -this.width || this.y < -this.height) {
             this.x = SCREEN_WIDTH + Math.random() * 200;
@@ -654,6 +769,9 @@ class SpaceXRocket {
         ctx.fillStyle = '#87CEFA';
         ctx.beginPath();
         ctx.arc(0, -this.height/3, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(0, this.height/4, 3, 0, Math.PI * 2);
         ctx.fill();
         
         // Rocket engines (Merlin engines)
@@ -719,7 +837,7 @@ class PlayerRocket {
         this.velocity += GRAVITY * deltaTime;
         this.y += this.velocity * deltaTime;
         this.rotation = Math.max(-30, Math.min(30, this.velocity * 2));
-        this.flameAnimation = (this.flameAnimation + 1) % 6;
+        this.flameAnimation = (this.flameAnimation + 1 * deltaTime) % 6;
         
         // Gradually reduce thruster flare
         if (this.thrusterFlare > 0) {
@@ -982,6 +1100,158 @@ class DonaldTrump {
     }
 }
 
+class Chainsaw {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.width = 90;  // Width for a longer blade
+        this.height = 45;  // Height (handles only horizontal)
+        this.collected = false;
+        this.animationFrame = 0;  // For animation
+        this.animationDirection = 1;  // 1 for up, -1 for down
+        this.teethAnimation = 0;  // For animating the teeth
+        this.teethAnimationSpeed = 0.2; // Fixed animation speed
+    }
+
+    update(deltaTime) {
+        // Update movement with deltaTime passed from the Game class
+        this.x -= PIPE_SPEED * deltaTime;
+        
+        // Update animations at a consistent rate
+        const animationSpeed = 0.5; // Adjust as needed
+        
+        // Simple bobbing animation
+        if (this.animationFrame > 10) this.animationDirection = -1;
+        if (this.animationFrame < -10) this.animationDirection = 1;
+        this.animationFrame += this.animationDirection * animationSpeed * deltaTime;
+        
+        // Animate the teeth (running chainsaw effect) - adjust for smoother animation
+        this.teethAnimation += this.teethAnimationSpeed * deltaTime;
+        if (this.teethAnimation >= 6) {
+            this.teethAnimation = 0;
+        }
+    }
+
+    draw() {
+        if (this.collected) return;
+
+        ctx.save();
+        
+        // Add a glowing effect around the chainsaw
+        ctx.shadowColor = '#FF6600';
+        ctx.shadowBlur = 10;
+        
+        // Apply bobbing animation
+        const yOffset = this.animationFrame * 0.2;
+        
+        // Create a cleaner chainsaw design without the vertical handle
+        
+        // ENGINE HOUSING (Red/orange body)
+        ctx.fillStyle = '#FF4400';
+        // Main engine block
+        ctx.fillRect(this.x + 10, this.y + 10 + yOffset, 25, 20);
+        
+        // ENGINE DETAILS
+        // Black engine details
+        ctx.fillStyle = '#222222';
+        // Engine top detail
+        ctx.fillRect(this.x + 15, this.y + 5 + yOffset, 15, 5);
+        // Exhaust port
+        ctx.fillRect(this.x + 30, this.y + 8 + yOffset, 5, 8);
+        
+        // HANDLE GRIP (horizontal part only)
+        ctx.fillStyle = '#663300'; // Brown for wooden handle
+        // Grip crossbar (horizontal part only)
+        ctx.fillRect(this.x + 5, this.y + 20 + yOffset, 30, 10);
+        
+        // GUIDE BAR (extending from engine) - longer now
+        ctx.fillStyle = '#777777';
+        // Guide bar - increased length to 50
+        ctx.fillRect(this.x + 35, this.y + 15 + yOffset, 50, 10);
+        
+        // CHAIN TEETH - more pronounced with animation
+        // Base chain - increased length to 50
+        ctx.fillStyle = '#444444';
+        ctx.fillRect(this.x + 35, this.y + 14 + yOffset, 50, 12);
+        
+        // Animated teeth
+        ctx.fillStyle = '#FFFFFF';
+        for (let i = 0; i < 12; i++) {  // Increased teeth count for longer blade
+            // Calculate tooth position with animation
+            const offset = (i + Math.floor(this.teethAnimation)) % 12;
+            
+            // Top teeth (bigger and more prominent)
+            ctx.fillRect(
+                this.x + 37 + offset * 4, 
+                this.y + 12 + yOffset, 
+                2, 
+                3
+            );
+            
+            // Bottom teeth
+            ctx.fillRect(
+                this.x + 37 + offset * 4, 
+                this.y + 25 + yOffset, 
+                2, 
+                3
+            );
+            
+            // Make some teeth look more like cutting teeth with diagonal shape
+            if (i % 2 === 0) {
+                ctx.fillRect(
+                    this.x + 38 + offset * 4, 
+                    this.y + 14 + yOffset, 
+                    1, 
+                    1
+                );
+                
+                ctx.fillRect(
+                    this.x + 38 + offset * 4, 
+                    this.y + 24 + yOffset, 
+                    1, 
+                    1
+                );
+            }
+        }
+        
+        // CONTROLS & DETAILS
+        // Red power button on top of engine
+        ctx.fillStyle = '#FF0000';
+        ctx.fillRect(this.x + 12, this.y + 7 + yOffset, 5, 3);
+        
+        // OUTLINES to make it pop
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 2;
+        
+        // Engine outline
+        ctx.strokeRect(this.x + 10, this.y + 10 + yOffset, 25, 20);
+        
+        // Guide bar outline - increased length to 50
+        ctx.strokeRect(this.x + 35, this.y + 15 + yOffset, 50, 10);
+        
+        // Handle outline
+        ctx.strokeRect(this.x + 5, this.y + 20 + yOffset, 30, 10);
+        
+        // Add tip of blade with curved nose - adjusted position
+        ctx.fillStyle = '#777777';
+        ctx.beginPath();
+        ctx.arc(this.x + 85, this.y + 20 + yOffset, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.restore();
+    }
+
+    getRect() {
+        return {
+            x: this.x,
+            y: this.y,
+            width: this.width,
+            height: this.height
+        };
+    }
+}
+
 class Game {
     constructor() {
         this.state = GAME_STATE.START;
@@ -1022,13 +1292,21 @@ class Game {
         this.announcementTime = 0;
 
         this.lastFrameTime = Date.now();
+        
+        // Chainsaw counter
+        this.chainsawCount = 0;
+        this.towersSpawned = 0;  // Add counter for towers spawned
+        this.chainsaws = [];  // Array to store chainsaw objects
     }
 
     reset() {
         this.truck = new Cybertruck();
         this.towers = [];
+        this.chainsaws = [];  // Reset chainsaws array
         this.lastTower = 0;
         this.score = 0;
+        this.chainsawCount = 0;  // Reset chainsaw count
+        this.towersSpawned = 0;  // Reset towers spawned counter
         this.nationalDebt = NATIONAL_DEBT;
         this.updateScore();
         
@@ -1073,8 +1351,8 @@ class Game {
         const deltaTime = Math.min((now - this.lastFrameTime) / 16.67, 2); // Cap at 2x normal time step
         this.lastFrameTime = now;
         
-        // Update rocket in all states
-        this.rocket.update();
+        // Update rocket in all states with deltaTime
+        this.rocket.update(deltaTime);
         
         // Update title animation on start screen
         if (this.state === GAME_STATE.START) {
@@ -1119,9 +1397,9 @@ class Game {
             this.truck.update();
         }
         
-        // Update White Houses (background)
-        this.whiteHouse1.update();
-        this.whiteHouse2.update();
+        // Update White Houses (background) with deltaTime
+        this.whiteHouse1.update(deltaTime);
+        this.whiteHouse2.update(deltaTime);
         
         // Generate new towers
         if (currentTime - this.lastTower > PIPE_FREQUENCY) {
@@ -1131,12 +1409,26 @@ class Game {
                 this.towers.push(new TrumpTower());
             }
             this.lastTower = currentTime;
+            this.towersSpawned++;
+            
+            // Spawn chainsaw after every 3rd tower
+            if (this.towersSpawned % 3 === 0) {
+                // Get the y position of the gap from the most recently spawned tower
+                const latestTower = this.towers[this.towers.length - 1];
+                const chainsaw = new Chainsaw(
+                    SCREEN_WIDTH,
+                    latestTower.gap_y  // Position in middle of gap
+                );
+                this.chainsaws.push(chainsaw);
+                console.log("Spawned chainsaw at position:", chainsaw.x, chainsaw.y);
+            }
         }
 
-        // Update towers with delta time
+        // Update towers with delta time - FIXED MOVEMENT CODE
         for (let i = this.towers.length - 1; i >= 0; i--) {
             const tower = this.towers[i];
-            tower.x -= PIPE_SPEED * deltaTime; // Apply delta time to tower movement
+            tower.update(deltaTime); // Pass deltaTime to tower's update
+            tower.x -= PIPE_SPEED * deltaTime; // This is the key line that actually moves towers
             
             if (tower.x < -50) {
                 this.towers.splice(i, 1);
@@ -1172,6 +1464,31 @@ class Game {
         } else {
             if (this.truck.y < 0 || this.truck.y > SCREEN_HEIGHT) {
                 this.state = GAME_STATE.GAME_OVER;
+            }
+        }
+        
+        // Update and check chainsaw collisions
+        for (let i = this.chainsaws.length - 1; i >= 0; i--) {
+            const chainsaw = this.chainsaws[i];
+            chainsaw.update(deltaTime); // Pass deltaTime to chainsaw update
+            
+            // Remove chainsaw if off screen
+            if (chainsaw.x + chainsaw.width < 0) {
+                this.chainsaws.splice(i, 1);
+                continue;
+            }
+
+            // Check for collection
+            if (!chainsaw.collected) {
+                const playerRect = this.transformed ? this.playerRocket.getRect() : this.truck.getRect();
+                if (this.checkCollision(playerRect, chainsaw.getRect())) {
+                    chainsaw.collected = true;
+                    this.chainsawCount++;
+                    console.log("Chainsaw collected! Count:", this.chainsawCount);
+                    // Play collection sound
+                    thrusterSound.currentTime = 0;
+                    thrusterSound.play().catch(e => console.log("Error playing sound:", e));
+                }
             }
         }
     }
@@ -1293,6 +1610,108 @@ class Game {
         ctx.fillText('Controls: SPACE to jump', SCREEN_WIDTH/2, SCREEN_HEIGHT - 55);
     }
 
+    drawChainsawCount() {
+        const cornerX = 15;
+        const cornerY = 35;
+        
+        // Draw small chainsaw icon
+        ctx.save();
+        
+        // Add a subtle glow effect
+        ctx.shadowColor = '#FF6600';
+        ctx.shadowBlur = 5;
+        
+        const iconScale = 0.6;
+        const iconX = cornerX;
+        const iconY = cornerY;
+        
+        // Create a proper chainsaw (mini version)
+        
+        // ENGINE HOUSING (Red/orange body)
+        ctx.fillStyle = '#FF4400';
+        // Main engine block
+        ctx.fillRect(iconX + 10 * iconScale, iconY + 10 * iconScale, 25 * iconScale, 20 * iconScale);
+        
+        // ENGINE DETAILS
+        // Black engine details
+        ctx.fillStyle = '#222222';
+        // Engine top detail
+        ctx.fillRect(iconX + 15 * iconScale, iconY + 5 * iconScale, 15 * iconScale, 5 * iconScale);
+        // Exhaust port
+        ctx.fillRect(iconX + 30 * iconScale, iconY + 8 * iconScale, 5 * iconScale, 8 * iconScale);
+        
+        // HANDLE GRIP (horizontal part only)
+        ctx.fillStyle = '#663300'; // Brown for wooden handle
+        // Grip crossbar (horizontal part only)
+        ctx.fillRect(iconX + 5 * iconScale, iconY + 20 * iconScale, 30 * iconScale, 10 * iconScale);
+        
+        // GUIDE BAR (extending from engine) - longer now
+        ctx.fillStyle = '#777777';
+        // Guide bar - increased length
+        ctx.fillRect(iconX + 35 * iconScale, iconY + 15 * iconScale, 45 * iconScale, 10 * iconScale);
+        
+        // CHAIN TEETH - simplified for small icon
+        ctx.fillStyle = '#FFFFFF';
+        for (let i = 0; i < 10; i++) {
+            // Top teeth
+            ctx.fillRect(
+                iconX + (38 + i * 4) * iconScale, 
+                iconY + 13 * iconScale, 
+                2 * iconScale, 
+                2 * iconScale
+            );
+            
+            // Bottom teeth
+            ctx.fillRect(
+                iconX + (38 + i * 4) * iconScale, 
+                iconY + 25 * iconScale, 
+                2 * iconScale, 
+                2 * iconScale
+            );
+        }
+        
+        // Red power button
+        ctx.fillStyle = '#FF0000';
+        ctx.fillRect(iconX + 12 * iconScale, iconY + 7 * iconScale, 5 * iconScale, 3 * iconScale);
+        
+        // OUTLINES to make it pop
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 1;
+        
+        // Engine outline
+        ctx.strokeRect(iconX + 10 * iconScale, iconY + 10 * iconScale, 25 * iconScale, 20 * iconScale);
+        
+        // Guide bar outline - increased length
+        ctx.strokeRect(iconX + 35 * iconScale, iconY + 15 * iconScale, 45 * iconScale, 10 * iconScale);
+        
+        // Handle outline
+        ctx.strokeRect(iconX + 5 * iconScale, iconY + 20 * iconScale, 30 * iconScale, 10 * iconScale);
+        
+        // Add tip of blade with curved nose - adjusted position
+        ctx.fillStyle = '#777777';
+        ctx.beginPath();
+        ctx.arc(iconX + 80 * iconScale, iconY + 20 * iconScale, 3 * iconScale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        
+        // Reset shadow before drawing number
+        ctx.shadowBlur = 0;
+        
+        // Draw "x" symbol
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 16px Arial';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        const xPos = iconX + 90 * iconScale;
+        ctx.fillText('x', xPos, iconY + 20);
+        
+        // Draw pixelated number using our helper function
+        ctx.fillStyle = '#FFFFFF';
+        drawPixelatedNumber(ctx, this.chainsawCount, xPos + 15, iconY + 10, 2);
+        
+        ctx.restore();
+    }
+
     draw() {
         if (this.state === GAME_STATE.START) {
             this.drawStartScreen();
@@ -1320,6 +1739,14 @@ class Game {
         for (const tower of this.towers) {
             tower.draw();
         }
+        
+        // Draw chainsaws
+        for (const chainsaw of this.chainsaws) {
+            chainsaw.draw();
+        }
+        
+        // Draw chainsaw count in corner
+        this.drawChainsawCount();
         
         // Draw debt reduction animation if active
         if (this.showingDebtReduction && Date.now() - this.debtReductionTime < 1000) {
