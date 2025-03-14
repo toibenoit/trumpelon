@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberFlap - Save the Economy!</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #1a1a1a;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+        
+        #gameContainer {
+            position: relative;
+            margin: 20px auto;
+        }
+        
+        #gameCanvas {
+            border: 3px solid #333;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        #score {
+            font-size: 18px;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        
+        h1 {
+            color: #FF3D00;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .instructions {
+            margin-top: 20px;
+            text-align: center;
+            max-width: 500px;
+            font-size: 14px;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+    <h1>CyberFlap</h1>
+    
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="400" height="600"></canvas>
+        <div id="score">Score: 0 | Debt: $34.00 trillion</div>
+    </div>
+    
+    <div class="instructions">
+        <p>Help Elon Musk reduce the national debt by navigating through obstacles!</p>
+        <p>Press SPACE to jump. After 30 obstacles, transform into a Falcon 9 rocket!</p>
+        <p>Debug keys: T (test transformation), F (start as Falcon 9), D (debug mode)</p>
+    </div>
+    
+    <script src="game.js"></script>
+</body>
+</html> 
