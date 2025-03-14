@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate "Woke Mind Virus" Audio</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .controls {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+        }
+        select, input {
+            padding: 8px;
+            margin: 5px 0;
+        }
+        .instructions {
+            background-color: #fffde7;
+            padding: 15px;
+            border-left: 4px solid #ffd600;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Generate "Woke Mind Virus" Audio</h1>
+    
+    <div class="instructions">
+        <p>This tool helps you generate a speech synthesis version of "woke mind virus" that you can record and save for your game.</p>
+        <p>1. Adjust the voice settings below</p>
+        <p>2. Click "Speak" to hear the phrase</p>
+        <p>3. Use screen recording software or browser extensions to record the audio</p>
+        <p>4. Save the recording to your game's sounds folder</p>
+    </div>
+    
+    <div class="controls">
+        <h2>Voice Controls</h2>
+        <div>
+            <label for="voice-select">Voice:</label>
+            <select id="voice-select"></select>
+        </div>
+        <div>
+            <label for="rate">Rate:</label>
+            <input type="range" id="rate" min="0.5" max="2" value="0.9" step="0.1">
+            <span id="rate-value">0.9</span>
+        </div>
+        <div>
+            <label for="pitch">Pitch:</label>
+            <input type="range" id="pitch" min="0.5" max="2" value="0.8" step="0.1">
+            <span id="pitch-value">0.8</span>
+        </div>
+        <div>
+            <label for="text">Text:</label>
+            <input type="text" id="text" value="woke mind virus" style="width: 300px;">
+        </div>
+        <button id="speak-btn">Speak</button>
+    </div>
+    
+    <script>
+        // Initialize speech synthesis
+        const synth = window.speechSynthesis;
+        let voices = [];
+        
+        // DOM elements
+        const voiceSelect = document.getElementById('voice-select');
+        const rateInput = document.getElementById('rate');
+        const rateValue = document.getElementById('rate-value');
+        const pitchInput = document.getElementById('pitch');
+        const pitchValue = document.getElementById('pitch-value');
+        const textInput = document.getElementById('text');
+        const speakBtn = document.getElementById('speak-btn');
+        
+        // Update the voices when they are loaded
+        function populateVoiceList() {
+            voices = synth.getVoices();
+            voiceSelect.innerHTML = '';
+            
+            voices.forEach((voice, i) => {
+                const option = document.createElement('option');
+                option.textContent = `${voice.name} (${voice.lang})`;
+                option.setAttribute('data-lang', voice.lang);
+                option.setAttribute('data-name', voice.name);
+                option.value = i;
+                voiceSelect.appendChild(option);
+            });
+            
+            // Try to select a male voice by default
+            const maleVoiceIndex = voices.findIndex(voice => 
+                voice.name.toLowerCase().includes('male') || 
+                voice.name.toLowerCase().includes('guy') ||
+                voice.name.toLowerCase().includes('daniel') ||
+                voice.name.toLowerCase().includes('david') ||
+                voice.name.toLowerCase().includes('james')
+            );
+            
+            if (maleVoiceIndex !== -1) {
+                voiceSelect.value = maleVoiceIndex;
+            }
+        }
+        
+        // Chrome loads voices asynchronously
+        if (synth.onvoiceschanged !== undefined) {
+            synth.onvoiceschanged = populateVoiceList;
+        }
+        
+        // Initial population attempt
+        populateVoiceList();
+        
+        // Update displayed values
+        rateInput.addEventListener('input', () => {
+            rateValue.textContent = rateInput.value;
+        });
+        
+        pitchInput.addEventListener('input', () => {
+            pitchValue.textContent = pitchInput.value;
+        });
+        
+        // Speak button handler
+        speakBtn.addEventListener('click', () => {
+            if (synth.speaking) {
+                synth.cancel();
+                return;
+            }
+            
+            const utterance = new SpeechSynthesisUtterance(textInput.value);
+            
+            utterance.voice = voices[voiceSelect.value];
+            utterance.rate = parseFloat(rateInput.value);
+            utterance.pitch = parseFloat(pitchInput.value);
+            
+            synth.speak(utterance);
+        });
+    </script>
+</body>
+</html> 

@@ -27,6 +27,36 @@ thrusterSound.volume = 0.3; // Set volume to 30%
 const transformSound = new Audio('https://assets.mixkit.co/active_storage/sfx/1184/1184-preview.mp3');
 transformSound.volume = 0.4; // Set volume to 40%
 
+// Add Elon Musk "woke mind virus" sound with multiple fallback options
+const elonSound = new Audio();
+elonSound.volume = 0.8; // Set volume to 80%
+
+// Try multiple sources for better browser compatibility
+const elonSoundSources = [
+    // Primary source - direct MP3 link
+    'https://www.101soundboards.com/storage/board_sounds_rendered/450011.mp3',
+    // Fallback 1 - alternative source
+    'https://www.myinstants.com/media/sounds/elon-musk-woke-mind-virus.mp3',
+    // Fallback 2 - another alternative
+    'https://www.101soundboards.com/storage/board_sounds_rendered/10058.mp3'
+];
+
+// Try to load the first source
+elonSound.src = elonSoundSources[0];
+
+// Add error handling to try fallback sources if the primary fails
+elonSound.addEventListener('error', function() {
+    console.log("Error loading primary audio source, trying fallback...");
+    // Try the next source
+    const currentIndex = elonSoundSources.indexOf(elonSound.src);
+    if (currentIndex < elonSoundSources.length - 1) {
+        elonSound.src = elonSoundSources[currentIndex + 1];
+    }
+});
+
+// Preload the sound
+elonSound.load();
+
 // Load custom fonts
 const trumpFont = new FontFace('TrumpTower', 'url(https://fonts.cdnfonts.com/css/helvetica-neue-9)');
 trumpFont.load().then(function(loadedFace) {
@@ -1384,36 +1414,45 @@ class Game {
         
         // Draw debt reduction animation if active
         if (this.showingDebtReduction && Date.now() - this.debtReductionTime < 1000) {
-            ctx.fillStyle = 'rgba(0, 100, 0, ' + (1 - (Date.now() - this.debtReductionTime) / 1000) + ')';
+            // Apply shadow for better visibility
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+            ctx.shadowBlur = 3;
+            ctx.shadowOffsetX = 1;
+            ctx.shadowOffsetY = 1;
+            
+            ctx.fillStyle = 'rgba(0, 200, 0, ' + (1 - (Date.now() - this.debtReductionTime) / 1000) + ')';
             ctx.font = 'bold 24px Arial';
             ctx.textAlign = 'center';
             ctx.fillText('-$10 Billion', SCREEN_WIDTH/2, 100);
+            
+            // Reset shadow
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
         } else {
             this.showingDebtReduction = false;
         }
 
-        // Draw announcement if active
+        // Draw announcement if active - simplified clean style
         if (this.announcement && Date.now() - this.announcementTime < 3000) {
-            // Create a semi-transparent background for better readability
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            // Apply shadow for better visibility
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+            ctx.shadowBlur = 3;
+            ctx.shadowOffsetX = 1;
+            ctx.shadowOffsetY = 1;
             
-            // Measure text width to ensure it fits
-            ctx.font = 'bold 18px Arial';
-            const textWidth = ctx.measureText(this.announcement).width;
-            const padding = 10;
-            
-            // Draw background rectangle with padding
-            ctx.fillRect(
-                SCREEN_WIDTH/2 - textWidth/2 - padding, 
-                15 - padding, 
-                textWidth + padding * 2, 
-                30
-            );
-            
-            // Draw text centered on screen
+            // Draw text centered on screen with clean style
             ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 20px Arial';
             ctx.textAlign = 'center';
-            ctx.fillText(this.announcement, SCREEN_WIDTH/2, 30);
+            ctx.fillText(this.announcement, SCREEN_WIDTH/2, 60);
+            
+            // Reset shadow
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
         }
 
         // Draw game over message with better styling
@@ -1479,6 +1518,27 @@ document.addEventListener('keydown', (event) => {
     if (event.code === 'Space') {
         if (game.state === GAME_STATE.START) {
             game.state = GAME_STATE.PLAYING;
+            
+            // Play Elon Musk sound when starting the game
+            try {
+                elonSound.currentTime = 0;
+                const playPromise = elonSound.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.log("Audio playback failed:", error);
+                        // Create a speech synthesis fallback if audio fails
+                        if ('speechSynthesis' in window) {
+                            const utterance = new SpeechSynthesisUtterance("woke mind virus");
+                            utterance.rate = 0.9;
+                            utterance.pitch = 0.8;
+                            speechSynthesis.speak(utterance);
+                        }
+                    });
+                }
+            } catch (e) {
+                console.log("Audio error:", e);
+            }
         } else if (game.state === GAME_STATE.GAME_OVER) {
             game.state = GAME_STATE.PLAYING;
             game.reset();
