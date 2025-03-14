@@ -1436,24 +1436,31 @@ class Game {
     
     // New method to draw the score counter inside the game canvas
     drawScoreCounter() {
-        // Create a semi-transparent background for the score
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-        ctx.fillRect(10, 10, SCREEN_WIDTH - 20, 40);
+        // Remove background and border, just draw the text directly
         
-        // Add a border
-        ctx.strokeStyle = '#FFFFFF';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(10, 10, SCREEN_WIDTH - 20, 40);
+        // Draw score text with shadow for better visibility
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 18px Arial';
+        ctx.textAlign = 'left';
+        
+        // Add shadow for better readability against any background
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+        ctx.shadowBlur = 3;
+        ctx.shadowOffsetX = 1;
+        ctx.shadowOffsetY = 1;
         
         // Draw score text
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 16px Arial';
-        ctx.textAlign = 'left';
-        ctx.fillText(`Score: ${this.score}`, 20, 30);
+        ctx.fillText(`Score: ${this.score}`, 15, 30);
         
         // Draw debt text
         ctx.textAlign = 'right';
-        ctx.fillText(`Debt: $${(this.nationalDebt / 1000000000000).toFixed(2)}T`, SCREEN_WIDTH - 20, 30);
+        ctx.fillText(`Debt: $${(this.nationalDebt / 1000000000000).toFixed(2)}T`, SCREEN_WIDTH - 15, 30);
+        
+        // Reset shadow
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
     }
 }
 
