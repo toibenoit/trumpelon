@@ -9,6 +9,7 @@ const PIPE_FREQUENCY = 1500;
 const NATIONAL_DEBT = 34000000000000; // $34 trillion starting debt
 const DEBT_REDUCTION = 10000000000; // $10 billion per obstacle
 const DEBUG_MODE = false; // Disable debug mode
+const CHAINSAW_FREQUENCY = 800; // Increased frequency of chainsaw spawns in ms
 
 // Game states
 const GAME_STATE = {
@@ -1004,6 +1005,96 @@ class DonaldTrump {
     }
 }
 
+// New Chainsaw class for collectible item
+class Chainsaw {
+    constructor(x, y) {
+        this.width = 40; // Increased size
+        this.height = 30;
+        // Position is now set when creating the chainsaw
+        this.x = x;
+        this.y = y;
+        
+        this.collected = false;
+        this.stationary = true; // Chainsaws are stationary
+    }
+    
+    update() {
+        // No movement or glow - chainsaws are just stationary
+        // Empty update function
+    }
+    
+    draw() {
+        if (this.collected) return;
+        
+        ctx.save();
+        ctx.translate(this.x + this.width/2, this.y + this.height/2);
+        
+        // Draw an all-red chainsaw
+        
+        // Engine housing - darker red (main body)
+        ctx.fillStyle = '#CC2200';
+        ctx.fillRect(-this.width/2, -this.height/4, this.width/2, this.height/2);
+        
+        // Main body contour - bright red
+        ctx.fillStyle = '#FF3300';
+        ctx.fillRect(-this.width/2 + 2, -this.height/4 + 2, this.width/2 - 4, this.height/2 - 4);
+        
+        // Handle - dark red instead of black
+        ctx.fillStyle = '#AA1100';
+        ctx.fillRect(-this.width/2, -this.height/3, this.width/6, this.height/1.5);
+        
+        // Handle grip - ridges with dark red
+        ctx.fillStyle = '#991100';
+        for (let i = 0; i < 4; i++) {
+            ctx.fillRect(-this.width/2, -this.height/4 + i * (this.height/8), this.width/6, this.height/16);
+        }
+        
+        // Top handle connection - dark red
+        ctx.fillStyle = '#AA1100';
+        ctx.fillRect(-this.width/2 + this.width/6, -this.height/3, this.width/8, this.height/10);
+        
+        // Bar - light gray (keeping this gray for contrast)
+        ctx.fillStyle = '#AAAAAA';
+        ctx.fillRect(0, -this.height/10, this.width/2, this.height/5);
+        
+        // Chain outline
+        ctx.strokeStyle = '#AA1100';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.rect(0, -this.height/10, this.width/2, this.height/5);
+        ctx.stroke();
+        
+        // Chain teeth - white
+        ctx.fillStyle = '#FFFFFF';
+        const teethCount = 8;
+        const teethSpacing = (this.width/2) / teethCount;
+        for (let i = 0; i < teethCount; i++) {
+            ctx.fillRect(teethSpacing/2 + i * teethSpacing, -this.height/10, 2, this.height/5);
+        }
+        
+        // Controls/button - dark red instead of black
+        ctx.fillStyle = '#991100';
+        ctx.fillRect(-this.width/4, -this.height/4, this.width/10, this.height/10);
+        
+        // Small details - engine vents with dark red
+        ctx.fillStyle = '#991100';
+        for (let i = 0; i < 3; i++) {
+            ctx.fillRect(-this.width/3, -this.height/8 + i * (this.height/12), this.width/12, this.height/20);
+        }
+        
+        ctx.restore();
+    }
+    
+    getRect() {
+        return {
+            x: this.x,
+            y: this.y,
+            width: this.width,
+            height: this.height
+        };
+    }
+}
+
 class Game {
     constructor() {
         this.state = GAME_STATE.START;
@@ -1055,6 +1146,11 @@ class Game {
         // Stars for space background
         this.stars = [];
         this.generateStars();
+        
+        // Add chainsaws collection
+        this.chainsaws = [];
+        this.lastChainsaw = 0;
+        this.chainsawCount = 0;
     }
 
     // Generate stars for space background
@@ -1112,6 +1208,10 @@ class Game {
         }
         
         this.transformed = false;
+        
+        this.chainsaws = [];
+        this.lastChainsaw = 0;
+        this.chainsawCount = 0;
     }
 
     updateScore() {
@@ -1190,18 +1290,40 @@ class Game {
         
         // Generate new towers
         if (currentTime - this.lastTower > PIPE_FREQUENCY) {
+            let newTower;
             if (this.transformed) {
-                this.towers.push(new EPABuilding());
+                newTower = new EPABuilding();
             } else {
-                this.towers.push(new TrumpTower());
+                newTower = new TrumpTower();
             }
+            this.towers.push(newTower);
             this.lastTower = currentTime;
+            
+            // Add chainsaw in the gap between top and bottom of tower (1 in 3 chance)
+            if (Math.random() < 0.33) {
+                // Position in the middle of the gap
+                const gapY = newTower.gap_y;
+                const chainsaw = new Chainsaw(
+                    newTower.x + newTower.width / 2 - 20, // Centered horizontally in tower
+                    gapY // Vertical position in the gap
+                );
+                this.chainsaws.push(chainsaw);
+                this.lastChainsaw = currentTime;
+            }
         }
 
         // Update towers with delta time
         for (let i = this.towers.length - 1; i >= 0; i--) {
             const tower = this.towers[i];
             tower.x -= PIPE_SPEED * deltaTime; // Apply delta time to tower movement
+            
+            // Also move any chainsaws that belong to this tower
+            for (const chainsaw of this.chainsaws) {
+                // If chainsaw is roughly aligned with this tower, move it at the same speed
+                if (Math.abs(chainsaw.x - (tower.x + tower.width / 2)) < tower.width) {
+                    chainsaw.x -= PIPE_SPEED * deltaTime;
+                }
+            }
             
             if (tower.x < -50) {
                 this.towers.splice(i, 1);
@@ -1229,6 +1351,35 @@ class Game {
             }
         }
 
+        // Update chainsaws (just checking for collisions since they don't animate)
+        for (let i = this.chainsaws.length - 1; i >= 0; i--) {
+            const chainsaw = this.chainsaws[i];
+            
+            // Remove chainsaws that are off screen
+            if (chainsaw.x < -50) {
+                this.chainsaws.splice(i, 1);
+                continue;
+            }
+            
+            // Check for collision with player
+            if (!chainsaw.collected) {
+                const playerRect = this.transformed ? this.playerRocket.getRect() : this.truck.getRect();
+                if (this.checkCollision(playerRect, chainsaw.getRect())) {
+                    chainsaw.collected = true;
+                    this.chainsawCount++;
+                    
+                    // Play a collection sound effect
+                    try {
+                        thrusterSound.currentTime = 0;
+                        thrusterSound.play().catch(e => {});
+                    } catch (e) {}
+                    
+                    // Remove the chainsaw
+                    this.chainsaws.splice(i, 1);
+                }
+            }
+        }
+
         // Check if player is off screen
         if (this.transformed) {
             if (this.playerRocket.y < 0 || this.playerRocket.y > SCREEN_HEIGHT) {
@@ -1240,7 +1391,7 @@ class Game {
             }
         }
     }
-    
+
     showDebtReduction() {
         // This will be called when a tower is passed
         // We'll create a visual indicator that debt was reduced
@@ -1402,6 +1553,11 @@ class Game {
             tower.draw();
         }
         
+        // Draw chainsaws
+        for (const chainsaw of this.chainsaws) {
+            chainsaw.draw();
+        }
+        
         // Draw score and debt counter inside the game canvas
         this.drawScoreCounter();
         
@@ -1468,23 +1624,69 @@ class Game {
     
     // New method to draw the score counter inside the game canvas
     drawScoreCounter() {
-        // Remove background and border, just draw the text directly
-        
-        // Draw score text with shadow for better visibility
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 18px Arial';
-        ctx.textAlign = 'left';
-        
-        // Add shadow for better readability against any background
+        // Set up shadow for better readability against any background
         ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
         ctx.shadowBlur = 3;
         ctx.shadowOffsetX = 1;
         ctx.shadowOffsetY = 1;
         
-        // Draw score text
-        ctx.fillText(`Score: ${this.score}`, 15, 30);
+        // Draw chainsaw counter at the left side of the screen
+        ctx.save();
+        ctx.translate(15, 30);
         
-        // Draw debt text
+        // Draw a more detailed pixel art chainsaw
+        const iconSize = 24;
+        
+        // Engine housing - darker red (main body)
+        ctx.fillStyle = '#CC2200';
+        ctx.fillRect(0, -iconSize/4, iconSize/2, iconSize/2);
+        
+        // Main body contour - bright red
+        ctx.fillStyle = '#FF3300';
+        ctx.fillRect(2, -iconSize/4 + 2, iconSize/2 - 4, iconSize/2 - 4);
+        
+        // Handle - dark red instead of black
+        ctx.fillStyle = '#AA1100';
+        ctx.fillRect(0, -iconSize/3, iconSize/6, iconSize/1.5);
+        
+        // Handle grip - ridges with dark red
+        ctx.fillStyle = '#991100';
+        for (let i = 0; i < 3; i++) {
+            ctx.fillRect(0, -iconSize/4 + i * (iconSize/8), iconSize/6, iconSize/16);
+        }
+        
+        // Top handle connection - dark red
+        ctx.fillStyle = '#AA1100';
+        ctx.fillRect(iconSize/6, -iconSize/3, iconSize/8, iconSize/10);
+        
+        // Bar - light gray (keeping this gray for contrast)
+        ctx.fillStyle = '#AAAAAA';
+        ctx.fillRect(iconSize/2, -iconSize/10, iconSize/2, iconSize/5);
+        
+        // Chain outline
+        ctx.strokeStyle = '#AA1100';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.rect(iconSize/2, -iconSize/10, iconSize/2, iconSize/5);
+        ctx.stroke();
+        
+        // Chain teeth - white
+        ctx.fillStyle = '#FFFFFF';
+        const teethCount = 4;
+        const teethSpacing = (iconSize/2) / teethCount;
+        for (let i = 0; i < teethCount; i++) {
+            ctx.fillRect(iconSize/2 + teethSpacing/2 + i * teethSpacing, -iconSize/10, 1, iconSize/5);
+        }
+        
+        ctx.restore();
+        
+        // Draw chainsaw count (no glow effect)
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 18px Arial';
+        ctx.textAlign = 'left';
+        ctx.fillText(`× ${this.chainsawCount}`, 55, 30);
+        
+        // Draw debt text only (removed score text)
         ctx.textAlign = 'right';
         ctx.fillText(`Debt: $${(this.nationalDebt / 1000000000000).toFixed(2)}T`, SCREEN_WIDTH - 15, 30);
         
