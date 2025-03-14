@@ -27,35 +27,28 @@ thrusterSound.volume = 0.3; // Set volume to 30%
 const transformSound = new Audio('https://assets.mixkit.co/active_storage/sfx/1184/1184-preview.mp3');
 transformSound.volume = 0.4; // Set volume to 40%
 
-// Add Elon Musk "woke mind virus" sound with multiple fallback options
-const elonSound = new Audio();
-elonSound.volume = 0.8; // Set volume to 80%
-
-// Try multiple sources for better browser compatibility
-const elonSoundSources = [
-    // Primary source - direct MP3 link
-    'https://www.101soundboards.com/storage/board_sounds_rendered/450011.mp3',
-    // Fallback 1 - alternative source
-    'https://www.myinstants.com/media/sounds/elon-musk-woke-mind-virus.mp3',
-    // Fallback 2 - another alternative
-    'https://www.101soundboards.com/storage/board_sounds_rendered/10058.mp3'
-];
-
-// Try to load the first source
-elonSound.src = elonSoundSources[0];
-
-// Add error handling to try fallback sources if the primary fails
-elonSound.addEventListener('error', function() {
-    console.log("Error loading primary audio source, trying fallback...");
-    // Try the next source
-    const currentIndex = elonSoundSources.indexOf(elonSound.src);
-    if (currentIndex < elonSoundSources.length - 1) {
-        elonSound.src = elonSoundSources[currentIndex + 1];
-    }
-});
+// Add Elon Musk "woke mind virus" sound - using local file
+const elonSound = new Audio('sounds/woke-mind-virus.mp3');
+elonSound.volume = 1.0; // Set volume to 100%
 
 // Preload the sound
 elonSound.load();
+
+// Add error handling for the local audio file
+elonSound.addEventListener('error', function(e) {
+    console.log("Error loading local audio file:", e);
+    console.log("Using speech synthesis fallback...");
+    
+    // Create a speech synthesis fallback if audio fails
+    if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance("woke mind virus");
+        utterance.rate = 0.9;
+        utterance.pitch = 0.8;
+        
+        // Store the utterance for later use
+        window.elonUtterance = utterance;
+    }
+});
 
 // Load custom fonts
 const trumpFont = new FontFace('TrumpTower', 'url(https://fonts.cdnfonts.com/css/helvetica-neue-9)');
@@ -1521,20 +1514,25 @@ document.addEventListener('keydown', (event) => {
             
             // Play Elon Musk sound when starting the game
             try {
-                elonSound.currentTime = 0;
-                const playPromise = elonSound.play();
-                
-                if (playPromise !== undefined) {
-                    playPromise.catch(error => {
-                        console.log("Audio playback failed:", error);
-                        // Create a speech synthesis fallback if audio fails
-                        if ('speechSynthesis' in window) {
-                            const utterance = new SpeechSynthesisUtterance("woke mind virus");
-                            utterance.rate = 0.9;
-                            utterance.pitch = 0.8;
-                            speechSynthesis.speak(utterance);
-                        }
-                    });
+                if (elonSound.error) {
+                    // If the audio file failed to load, use speech synthesis
+                    if (window.elonUtterance) {
+                        speechSynthesis.speak(window.elonUtterance);
+                    }
+                } else {
+                    // Play the audio file
+                    elonSound.currentTime = 0;
+                    const playPromise = elonSound.play();
+                    
+                    if (playPromise !== undefined) {
+                        playPromise.catch(error => {
+                            console.log("Audio playback failed:", error);
+                            // Use speech synthesis as fallback
+                            if (window.elonUtterance) {
+                                speechSynthesis.speak(window.elonUtterance);
+                            }
+                        });
+                    }
                 }
             } catch (e) {
                 console.log("Audio error:", e);
